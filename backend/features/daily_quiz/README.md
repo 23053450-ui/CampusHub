@@ -1,26 +1,10 @@
-# Backend Feature: Daily Quiz (`features/daily_quiz`)
+# Daily Quiz
 
-**Scope:** Serves the Daily CS Practice Quiz (`frontend/src/features/daily-quiz/`).  
-**Router Prefix:** `/api/v1/daily-quiz`  
-**Endpoints:**
-- `GET /api/v1/daily-quiz/today` — Retrieve today's questions.
-- `POST /api/v1/daily-quiz/submit` — Submit answers and update streaks.
-**Supabase Requirement:** **Requires Supabase** (questions bank, attempts, streaks).
+The Daily Quiz backend provides question serving and challenge evaluation for the daily quiz feature. It manages daily questions and records student challenge completions.
 
----
+- **Frontend Path:** `frontend/src/features/daily-quiz/`
+- **Backend Path:** `backend/features/daily_quiz/`
+- **Route:** `/api/v1/daily-quiz`
+- **Backend Services:** FastAPI and Supabase
 
-## 1. Directory Structure
-
-```
-backend/features/daily_quiz/
-├── router.py       # HTTP route controller
-├── schemas.py      # Request & Response models
-├── service.py      # Question retrieval & streak evaluation logic
-└── README.md
-```
-
----
-
-## 2. Developer Freedom & Supabase Integration
-
-Developers have full freedom to design the question bank schema, difficulty progression, and streak calculations.
+Nothing outside this folder may import from it.

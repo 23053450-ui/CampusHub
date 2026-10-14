@@ -1,5 +1,5 @@
-import type { ProjectAnalysisResult, Result } from "@/types";
-
-export interface ProjectAnalysisService {
-  analyzeRepository(githubUrl: string): Promise<Result<ProjectAnalysisResult>>;
-}
+/**
+ * @file types.ts
+ * @description Service interface and types for Project Analysis feature.
+ * @owner Project Analysis Team
+ */

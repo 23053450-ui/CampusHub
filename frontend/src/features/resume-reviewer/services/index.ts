@@ -1,11 +1,5 @@
-import { mockResumeReviewerService } from "./mockService";
-import { realResumeReviewerService } from "./realService";
-import type { ResumeReviewerService } from "./types";
-
-export * from "./types";
-
-const isMock = import.meta.env.VITE_USE_MOCKS === "true";
-
-export const resumeReviewerService: ResumeReviewerService = isMock
-  ? mockResumeReviewerService
-  : realResumeReviewerService;
+/**
+ * @file index.ts
+ * @description Service entry point for Resume Reviewer feature.
+ * @owner Resume Reviewer Team
+ */

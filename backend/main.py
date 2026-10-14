@@ -1,15 +1,17 @@
+"""
+Main FastAPI application entry point.
+Registers core middleware and feature routers with their respective prefixes.
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
+
+from shared.health import router as health_router
 from features.subjects_ai.router import router as subjects_ai_router
 from features.project_analysis.router import router as project_analysis_router
 from features.resume_reviewer.router import router as resume_reviewer_router
 from features.daily_quiz.router import router as daily_quiz_router
-from pydantic import BaseModel
-
-class HealthResponse(BaseModel):
-    status: str
-    version: str
 
 app = FastAPI(title="CampusHub API", version="0.1.0")
 
@@ -21,13 +23,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1:1 Feature routers
-app.include_router(subjects_ai_router, prefix="/api/v1")
-app.include_router(project_analysis_router, prefix="/api/v1")
-app.include_router(resume_reviewer_router, prefix="/api/v1")
-app.include_router(daily_quiz_router, prefix="/api/v1")
+# Shared health check
+app.include_router(health_router, prefix="/api/v1")
 
-
-@app.get("/api/v1/health", response_model=HealthResponse, tags=["health"])
-async def health():
-    return HealthResponse(status="ok", version="0.1.0")
+# Feature routers included with their own prefixes
+app.include_router(subjects_ai_router, prefix="/api/v1/subjects-ai", tags=["subjects-ai"])
+app.include_router(project_analysis_router, prefix="/api/v1/project-analysis", tags=["project-analysis"])
+app.include_router(resume_reviewer_router, prefix="/api/v1/resume-reviewer", tags=["resume-reviewer"])
+app.include_router(daily_quiz_router, prefix="/api/v1/daily-quiz", tags=["daily-quiz"])

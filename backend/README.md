@@ -6,36 +6,20 @@ FastAPI service powering AI operations and technical features for CampusHub.
 
 ## 1. Directory Structure
 
-Each feature developer has an isolated, dedicated workspace inside `features/`:
-
-```
+```text
 backend/
-├── core/                       # Strict framework runtime ONLY
-│   ├── config.py               # Pydantic v2 settings & environment variables
+├── core/                       # Server runtime configuration
+│   ├── config.py               # Settings & environment variables
 │   ├── rate_limit.py           # In-memory sliding window rate limiter
 │   └── security.py             # JWT bearer auth & Supabase token validation
-├── features/                   # 🎯 1:1 Matching with Frontend Features
-│   ├── subjects_ai/            # Serves Subject Workspace AI Companion
-│   │   ├── router.py           # POST /chat, /flashcards, /quiz
-│   │   ├── schemas.py          # Pydantic request/response models
-│   │   ├── service.py          # Prompt templates & LLM execution
-│   │   └── README.md
-│   ├── project_analysis/       # Serves features/project-analysis
-│   │   ├── router.py           # POST /analyze
-│   │   ├── schemas.py
-│   │   ├── service.py          # GitHub tree audit & prompt execution
-│   │   └── README.md
-│   ├── resume_reviewer/        # Serves features/resume-reviewer
-│   │   ├── router.py           # POST /review
-│   │   ├── schemas.py
-│   │   ├── service.py          # In-memory PDF parsing & ATS evaluation
-│   │   └── README.md
-│   └── daily_quiz/             # Serves features/daily-quiz
-│       ├── router.py           # GET /today, POST /submit
-│       ├── schemas.py
-│       ├── service.py          # Question retrieval & streak logic
-│       └── README.md
-├── main.py                     # Registers routers under /api/v1/... (inlines HealthResponse)
+├── features/                   # 1:1 Matching Feature Modules
+│   ├── subjects_ai/            # router.py, schemas.py, service.py
+│   ├── project_analysis/       # router.py, schemas.py, service.py
+│   ├── resume_reviewer/        # router.py, schemas.py, service.py
+│   └── daily_quiz/             # router.py, schemas.py, service.py
+├── shared/                     # Health check endpoint
+│   └── health.py
+├── main.py                     # Registers routers under /api/v1/...
 └── requirements.txt
 ```
 
@@ -43,12 +27,12 @@ backend/
 
 ## 2. Feature Workspaces & Data Flow
 
-| Feature Module | Serves Frontend | Supabase Dependency | Endpoints |
-| :--- | :--- | :--- | :--- |
-| **`features/subjects_ai/`** | `features/subjects/components/ai-companion/` | **None (Stateless)** | `POST /api/v1/subjects-ai/chat`<br/>`POST /api/v1/subjects-ai/flashcards`<br/>`POST /api/v1/subjects-ai/quiz` |
-| **`features/project_analysis/`** | `features/project-analysis/` | **None (Stateless)** | `POST /api/v1/project-analysis/analyze` |
-| **`features/resume_reviewer/`** | `features/resume-reviewer/` | **None (Stateless)** | `POST /api/v1/resume-reviewer/review` |
-| **`features/daily_quiz/`** | `features/daily-quiz/` | **Requires Supabase** | `GET /api/v1/daily-quiz/today`<br/>`POST /api/v1/daily-quiz/submit` |
+| Feature Module | Serves Frontend | Data & API Flow |
+| :--- | :--- | :--- |
+| **`features/subjects_ai/`** | `features/subjects/` | **FastAPI** |
+| **`features/project_analysis/`** | `features/project-analysis/` | **FastAPI** |
+| **`features/resume_reviewer/`** | `features/resume-reviewer/` | **FastAPI** |
+| **`features/daily_quiz/`** | `features/daily-quiz/` | **FastAPI** & **Supabase** |
 
 ---
 

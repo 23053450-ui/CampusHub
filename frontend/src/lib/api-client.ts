@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { Result, AppError, AppErrorCode } from "@/types";
+import type { Result, AppError, AppErrorCode } from "@/shared/result";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 

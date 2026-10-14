@@ -1,0 +1,5 @@
+-- =============================================================================
+-- Migration: daily_quiz.sql
+-- Description: Daily Quiz feature tables, streaks, and history schema
+-- Owner: Daily Quiz Team
+-- =============================================================================

@@ -1,5 +1,5 @@
-import type { ResumeReviewResult, Result } from "@/types";
-
-export interface ResumeReviewerService {
-  reviewResume(file: File, targetRole?: string): Promise<Result<ResumeReviewResult>>;
-}
+/**
+ * @file types.ts
+ * @description Service interface and types for Resume Reviewer feature.
+ * @owner Resume Reviewer Team
+ */

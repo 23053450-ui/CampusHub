@@ -1,0 +1,5 @@
+-- =============================================================================
+-- Migration: project_analysis.sql
+-- Description: Project Analysis feature persistence schema
+-- Owner: Project Analysis Team
+-- =============================================================================

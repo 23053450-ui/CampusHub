@@ -1,0 +1,5 @@
+-- =============================================================================
+-- Migration: dashboard.sql
+-- Description: Dashboard feature views and student layout preferences
+-- Owner: Dashboard Team
+-- =============================================================================

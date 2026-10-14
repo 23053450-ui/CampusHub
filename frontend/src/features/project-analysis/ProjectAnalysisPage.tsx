@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function ProjectAnalysisPage() {
-  return <div className="h-full w-full" />;
+  return <h1>Project Analysis</h1>;
 }

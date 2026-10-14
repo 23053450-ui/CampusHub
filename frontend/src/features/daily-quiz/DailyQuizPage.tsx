@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function DailyQuizPage() {
-  return <div className="h-full w-full" />;
+  return <h1>Daily Quiz</h1>;
 }

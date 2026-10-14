@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function DashboardPage() {
-  return <div className="h-full w-full" />;
+  return <h1>Dashboard</h1>;
 }

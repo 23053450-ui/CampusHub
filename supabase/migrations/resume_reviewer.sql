@@ -1,0 +1,5 @@
+-- =============================================================================
+-- Migration: resume_reviewer.sql
+-- Description: Resume Reviewer feature persistence schema
+-- Owner: Resume Reviewer Team
+-- =============================================================================
