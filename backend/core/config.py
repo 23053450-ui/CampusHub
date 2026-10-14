@@ -1,0 +1,36 @@
+from typing import List, Union
+import json
+from pydantic import AliasChoices, Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    supabase_url: str = "https://placeholder.supabase.co"
+    supabase_anon_key: str = "placeholder-anon-key"
+    supabase_jwt_secret: str = "super-secret-placeholder-jwt-key-for-local-dev-only-32chars"
+    gemini_api_key: str = Field(
+        default="placeholder-gemini-key",
+        validation_alias=AliasChoices("gemini_api_key", "ai_api_key"),
+    )
+    allowed_origins: Union[List[str], str] = ["http://localhost:5173"]
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v):
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except Exception:
+                return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
+
+settings = Settings()
