@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function CommunitiesPage() {
-  return <h1>Communities</h1>;
+  return <div className="space-y-4" />;
 }

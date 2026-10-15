@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function DailyQuizPage() {
-  return <h1>Daily Quiz</h1>;
+  return <div className="space-y-4" />;
 }

@@ -1,5 +1,5 @@
 import React from "react";
 
 export default function DashboardPage() {
-  return <h1>Dashboard</h1>;
+  return <div className="space-y-4" />;
 }
