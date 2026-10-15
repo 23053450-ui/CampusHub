@@ -27,7 +27,8 @@ Every developer is assigned one isolated feature folder in Frontend (+ 1 matchin
 | :--- | :--- | :--- | :--- |
 | **Dashboard** | [`src/features/dashboard/`](frontend/src/features/dashboard/README.md) | *None* | Direct **Supabase** |
 | **Communities** | [`src/features/communities/`](frontend/src/features/communities/README.md) | *None* | Direct **Supabase** |
-| **Subjects** | [`src/features/subjects/`](frontend/src/features/subjects/README.md) | [`backend/features/subjects_ai/`](backend/features/subjects_ai/README.md) | **Supabase** & **FastAPI** |
+| **Subject Editor & Viewer** | [`src/features/subject-viewer/`](frontend/src/features/subject-viewer/README.md) | *None* | Direct **Supabase** |
+| **Subject AI Companion** | [`src/features/subject-ai-panel/`](frontend/src/features/subject-ai-panel/README.md) | [`backend/features/subjects_ai/`](backend/features/subjects_ai/README.md) | **FastAPI** (`/api/v1/subjects-ai/*`) |
 | **Project Analysis** | [`src/features/project-analysis/`](frontend/src/features/project-analysis/README.md) | [`backend/features/project_analysis/`](backend/features/project_analysis/README.md) | **FastAPI** |
 | **Resume Reviewer** | [`src/features/resume-reviewer/`](frontend/src/features/resume-reviewer/README.md) | [`backend/features/resume_reviewer/`](backend/features/resume_reviewer/README.md) | **FastAPI** |
 | **Daily Quiz** | [`src/features/daily-quiz/`](frontend/src/features/daily-quiz/README.md) | [`backend/features/daily_quiz/`](backend/features/daily_quiz/README.md) | **FastAPI** & **Supabase** |
@@ -49,13 +50,14 @@ frontend/src/
 │   ├── result.ts
 │   └── user.ts
 │
-└── features/                   # 1 Folder = 1 Developer Ownership
-    ├── dashboard/              # Dashboard feature (components/, services/, routes.tsx, DashboardPage.tsx)
-    ├── communities/            # Communities feature (components/, services/, routes.tsx, CommunitiesPage.tsx)
-    ├── subjects/               # Subjects workspace (components/, services/, routes.tsx, SubjectWorkspacePage.tsx)
-    ├── project-analysis/       # Project Analysis feature (components/, services/, routes.tsx, ProjectAnalysisPage.tsx)
-    ├── resume-reviewer/        # Resume Reviewer feature (components/, services/, routes.tsx, ResumeReviewerPage.tsx)
-    └── daily-quiz/             # Daily Quiz feature (components/, services/, routes.tsx, DailyQuizPage.tsx)
+└── features/                   # 🎯 1 Folder = 1 Developer Ownership
+    ├── dashboard/              # Dashboard overview (components/, services/, routes.tsx, DashboardPage.tsx)
+    ├── communities/            # Forum & resource archive (components/, services/, routes.tsx, CommunitiesPage.tsx)
+    ├── subject-viewer/         # Notes tree & document viewer (components/, services/, routes.tsx, SubjectViewerPage.tsx)
+    ├── subject-ai-panel/       # AI companion panel (components/, services/, routes.tsx, SubjectAiPanelPage.tsx)
+    ├── project-analysis/       # GitHub repo audit tool (components/, services/, routes.tsx, ProjectAnalysisPage.tsx)
+    ├── resume-reviewer/        # ATS PDF resume reviewer (components/, services/, routes.tsx, ResumeReviewerPage.tsx)
+    └── daily-quiz/             # CS fundamentals practice quiz (components/, services/, routes.tsx, DailyQuizPage.tsx)
 ```
 
 ### Backend (`backend/`)

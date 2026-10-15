@@ -37,6 +37,7 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith("/project-analysis")) return "Project Analysis";
   if (pathname.startsWith("/resume-reviewer")) return "Resume Reviewer";
   if (pathname.startsWith("/daily-quiz")) return "Daily Quiz";
+  if (pathname.startsWith("/subjects-ai")) return "Subject AI Companion";
   if (pathname.startsWith("/subjects")) {
     const parts = pathname.split("/").filter(Boolean);
     if (parts.length > 1) {
