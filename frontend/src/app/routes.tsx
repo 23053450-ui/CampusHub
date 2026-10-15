@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "./layouts/RootLayout";
+import SubjectWorkspaceLayout from "./layouts/SubjectWorkspaceLayout";
+import SubjectViewerPage from "@/features/subject-viewer/SubjectViewerPage";
 import { dashboardRoute } from "@/features/dashboard/routes";
 import { communitiesRoute } from "@/features/communities/routes";
-import { subjectViewerRoute } from "@/features/subject-viewer/routes";
-import { subjectAiPanelRoute } from "@/features/subject-ai-panel/routes";
 import { projectAnalysisRoute } from "@/features/project-analysis/routes";
 import { resumeReviewerRoute } from "@/features/resume-reviewer/routes";
 import { dailyQuizRoute } from "@/features/daily-quiz/routes";
@@ -15,8 +15,14 @@ export const router = createBrowserRouter([
     children: [
       dashboardRoute,
       communitiesRoute,
-      subjectViewerRoute,
-      subjectAiPanelRoute,
+      {
+        path: "subjects",
+        element: <SubjectWorkspaceLayout />,
+        children: [
+          { index: true, element: <SubjectViewerPage /> },
+          { path: ":subjectId", element: <SubjectViewerPage /> },
+        ],
+      },
       projectAnalysisRoute,
       resumeReviewerRoute,
       dailyQuizRoute,

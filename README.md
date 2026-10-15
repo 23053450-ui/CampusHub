@@ -33,6 +33,9 @@ Every developer is assigned one isolated feature folder in Frontend (+ 1 matchin
 | **Resume Reviewer** | [`src/features/resume-reviewer/`](frontend/src/features/resume-reviewer/README.md) | [`backend/features/resume_reviewer/`](backend/features/resume_reviewer/README.md) | **FastAPI** |
 | **Daily Quiz** | [`src/features/daily-quiz/`](frontend/src/features/daily-quiz/README.md) | [`backend/features/daily_quiz/`](backend/features/daily_quiz/README.md) | **FastAPI** & **Supabase** |
 
+> **Note on Subjects Workspace:**
+> [`src/features/subject-viewer/`](frontend/src/features/subject-viewer/README.md) and [`src/features/subject-ai-panel/`](frontend/src/features/subject-ai-panel/README.md) remain completely isolated modules with zero cross-imports. The app shell layout ([`SubjectWorkspaceLayout.tsx`](frontend/src/app/layouts/SubjectWorkspaceLayout.tsx)) brings them together on `/subjects/:subjectId`, placing the document viewer in the main canvas and the AI study companion in the right sidebar (toggled directly from the customizable top main header).
+
 ---
 
 ## 3. Directory Layouts

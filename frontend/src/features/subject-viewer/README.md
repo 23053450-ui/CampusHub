@@ -8,8 +8,8 @@ The **Subject Viewer** feature provides the core study workspace for university 
 - **Backend Services:** Supabase (`subjects`, `notes`, `subject-notes` bucket)
 
 > [!IMPORTANT]
-> **Feature Isolation Rule:**
-> Nothing outside this folder may import from it, except `app/routes.tsx` which imports `subjectViewerRoute`. Imports are only permitted from `components/ui`, `lib/`, `shared/`, and this feature's own directory.
+> **Feature Isolation & Shell Integration:**
+> `subject-viewer` is fully isolated in its own feature folder. It does not import from `subject-ai-panel` (and vice-versa). The app shell layout ([`SubjectWorkspaceLayout.tsx`](../../app/layouts/SubjectWorkspaceLayout.tsx)) renders `SubjectViewerPage` as the left/center canvas of `/subjects/:subjectId`, while placing the AI companion panel in the right sidebar.
 
 ---
 

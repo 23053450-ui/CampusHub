@@ -11,9 +11,9 @@ frontend/src/
 ├── app/                        # Shell layout (RootLayout.tsx) & aggregated route definitions (routes.tsx)
 │   ├── layouts/RootLayout.tsx
 │   └── routes.tsx
+├── lib/                        # Core utilities: supabase.ts, api-client.ts, header-context.tsx, use-resizable.ts, utils.ts
 ├── components/
-│   └── ui/                     # shadcn/ui primitives
-├── lib/                        # Core singletons: supabase.ts, api-client.ts, utils.ts
+│   └── ui/                     # shadcn/ui primitives & resize-handle.tsx
 ├── shared/                     # Global result and user types
 │   ├── result.ts
 │   └── user.ts
@@ -38,8 +38,8 @@ Every developer is assigned **one isolated feature folder**:
 | :--- | :--- | :--- | :--- |
 | **[`features/dashboard/`](src/features/dashboard/README.md)** | `/` | Direct **Supabase** (`profiles`, `subjects`, `enrollments`) | *None* |
 | **[`features/communities/`](src/features/communities/README.md)** | `/communities` | Direct **Supabase** (`posts`, `comments`, `notes`, `vote_post` RPC) | *None* |
-| **[`features/subject-viewer/`](src/features/subject-viewer/README.md)** | `/subjects/:subjectId` | Direct **Supabase** (`subjects`, `notes`, `subject-notes` bucket) | *None* |
-| **[`features/subject-ai-panel/`](src/features/subject-ai-panel/README.md)** | `/subjects-ai/:subjectId` | **FastAPI** (`/api/v1/subjects-ai/*`) | [`backend/features/subjects_ai/`](../../backend/features/subjects_ai/README.md) |
+| **[`features/subject-viewer/`](src/features/subject-viewer/README.md)** | `/subjects/:subjectId` (Main Canvas) | Direct **Supabase** (`subjects`, `notes`, `subject-notes` bucket) | *None* |
+| **[`features/subject-ai-panel/`](src/features/subject-ai-panel/README.md)** | `/subjects/:subjectId` (Right Sidebar, toggled via Main Header) | **FastAPI** (`/api/v1/subjects-ai/*`) | [`backend/features/subjects_ai/`](../../backend/features/subjects_ai/README.md) |
 | **[`features/project-analysis/`](src/features/project-analysis/README.md)** | `/project-analysis` | Stateless via **FastAPI** `POST /api/v1/project-analysis/analyze` | [`backend/features/project_analysis/`](../../backend/features/project_analysis/README.md) |
 | **[`features/resume-reviewer/`](src/features/resume-reviewer/README.md)** | `/resume-reviewer` | Stateless via **FastAPI** `POST /api/v1/resume-reviewer/review` | [`backend/features/resume_reviewer/`](../../backend/features/resume_reviewer/README.md) |
 | **[`features/daily-quiz/`](src/features/daily-quiz/README.md)** | `/daily-quiz` | **FastAPI** `/api/v1/daily-quiz/*` + Supabase `user_streaks` | [`backend/features/daily_quiz/`](../../backend/features/daily_quiz/README.md) |

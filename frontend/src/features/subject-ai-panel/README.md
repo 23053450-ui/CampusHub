@@ -4,12 +4,12 @@ The **Subject AI Panel** feature provides an intelligent, document-grounded AI c
 
 - **Frontend Path:** `frontend/src/features/subject-ai-panel/`
 - **Backend Counterpart:** [`backend/features/subjects_ai/`](../../../../backend/features/subjects_ai/README.md)
-- **Primary Route:** `/subjects-ai` and `/subjects-ai/:subjectId`
+- **Primary Route:** Embedded as the **Right Sidebar** of `/subjects/:subjectId` (via `app/layouts/SubjectWorkspaceLayout.tsx`)
 - **Backend Services:** FastAPI (`/api/v1/subjects-ai/*`)
 
 > [!IMPORTANT]
-> **Feature Isolation Rule:**
-> Nothing outside this folder may import from it, except `app/routes.tsx` which imports `subjectAiPanelRoute`. Imports are only permitted from `components/ui`, `lib/`, `shared/`, and this feature's own directory.
+> **Feature Isolation & Shell Integration:**
+> `subject-ai-panel` is fully isolated in its own feature folder. It does not import from `subject-viewer` (and vice-versa). The app shell layout ([`SubjectWorkspaceLayout.tsx`](../../app/layouts/SubjectWorkspaceLayout.tsx)) imports `SubjectAiPanelPage` and renders it as the dedicated right-hand study panel alongside the document viewer. Use `useParams().subjectId` to access the current course ID.
 
 ---
 

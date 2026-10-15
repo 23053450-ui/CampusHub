@@ -17,6 +17,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Subject } from "@/shared/user";
+import { HeaderProvider, useHeader } from "@/lib/header-context";
+import { useResizable } from "@/lib/use-resizable";
+import { ResizeHandle } from "@/components/ui/resize-handle";
 
 const subjects: Subject[] = [
   { id: "cs301", name: "Database Management Systems", code: "CS301" },
@@ -37,7 +40,6 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith("/project-analysis")) return "Project Analysis";
   if (pathname.startsWith("/resume-reviewer")) return "Resume Reviewer";
   if (pathname.startsWith("/daily-quiz")) return "Daily Quiz";
-  if (pathname.startsWith("/subjects-ai")) return "Subject AI Companion";
   if (pathname.startsWith("/subjects")) {
     const parts = pathname.split("/").filter(Boolean);
     if (parts.length > 1) {
@@ -49,13 +51,26 @@ function getPageTitle(pathname: string): string {
   return "Dashboard";
 }
 
-export default function RootLayout() {
+function RootLayoutContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isStudentToolsOpen, setIsStudentToolsOpen] = useState(true);
   const [isSubjectsOpen, setIsSubjectsOpen] = useState(true);
   const location = useLocation();
+  const { actions, title: customTitle } = useHeader();
 
-  const pageTitle = getPageTitle(location.pathname);
+  const {
+    width: sidebarWidth,
+    isDragging: isSidebarDragging,
+    handleProps: sidebarHandleProps,
+  } = useResizable({
+    direction: "right",
+    defaultWidth: 256,
+    minWidth: 200,
+    maxWidth: 440,
+    storageKey: "campushub:left-sidebar-width",
+  });
+
+  const pageTitle = customTitle || getPageTitle(location.pathname);
 
   const isStudentToolsActive = studentTools.some((tool) =>
     location.pathname.startsWith(tool.to)
@@ -72,13 +87,20 @@ export default function RootLayout() {
     <div className="flex min-h-screen bg-background text-foreground">
       {/* Sidebar with toggle */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card transition-all duration-200 md:static ${
+        style={
           isSidebarOpen
-            ? "w-64 translate-x-0"
-            : "-translate-x-full md:w-0 md:translate-x-0 md:border-r-0 md:overflow-hidden"
+            ? ({ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties)
+            : undefined
+        }
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card md:static relative ${
+          isSidebarDragging ? "" : "transition-[width] duration-200"
+        } ${
+          isSidebarOpen
+            ? "w-64 md:w-[var(--sidebar-width,16rem)] translate-x-0 shrink-0"
+            : "-translate-x-full md:w-0 md:translate-x-0 md:border-r-0 md:overflow-hidden shrink-0"
         }`}
       >
-        <div className="flex h-full w-64 flex-col justify-between p-4 overflow-y-auto">
+        <div className="flex h-full w-full flex-col justify-between p-4 overflow-y-auto">
           <div className="space-y-6">
             {/* App Logo */}
             <Link
@@ -225,6 +247,15 @@ export default function RootLayout() {
             </nav>
           </div>
         </div>
+
+        {isSidebarOpen && (
+          <ResizeHandle
+            side="right"
+            isDragging={isSidebarDragging}
+            {...sidebarHandleProps}
+            className="hidden md:flex"
+          />
+        )}
       </aside>
 
       {/* Backdrop for mobile view when sidebar is open */}
@@ -259,9 +290,14 @@ export default function RootLayout() {
             </h1>
           </div>
 
-          <Avatar className="h-8 w-8 cursor-pointer border hover:ring-2 hover:ring-primary/20 transition-all">
-            <AvatarFallback className="text-xs font-semibold">ST</AvatarFallback>
-          </Avatar>
+          <div className="flex items-center gap-2">
+            {/* Feature Custom Header Actions */}
+            {actions}
+
+            <Avatar className="h-8 w-8 cursor-pointer border hover:ring-2 hover:ring-primary/20 transition-all">
+              <AvatarFallback className="text-xs font-semibold">ST</AvatarFallback>
+            </Avatar>
+          </div>
         </header>
 
         {/* Content Area */}
@@ -270,5 +306,13 @@ export default function RootLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <HeaderProvider>
+      <RootLayoutContent />
+    </HeaderProvider>
   );
 }
