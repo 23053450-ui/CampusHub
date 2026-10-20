@@ -1,19 +1,14 @@
-"""
-Pydantic schemas for subjects_ai feature.
-Owner: subjects_ai team
-"""
 from typing import Literal
-from pydantic import BaseModel
-
+from pydantic import BaseModel, Field
 
 class Message(BaseModel):
     role: Literal["user", "assistant"]
-    content: str
+    content: str = Field(min_length=1, max_length=2000)
 
 
 class ChatRequest(BaseModel):
     subject_id: str
-    messages: list[Message]
+    messages: list[Message] = Field(min_length=1, max_length=40)
 
 
 class ChatResponse(BaseModel):

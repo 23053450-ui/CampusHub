@@ -1,0 +1,6 @@
+{
+  "subject_id": "cs301",
+  "messages": [
+    { "role": "user", "content": "Explain the ACID properties in a database, in detail." }
+  ]
+}
