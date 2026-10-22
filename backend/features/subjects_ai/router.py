@@ -9,17 +9,17 @@ router = APIRouter(tags=["subjects-ai"])
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
-    reply = generate_reply(req.subject_id, req.messages)
+    reply = generate_reply(req.subject_id, req.messages, req.documents)
     return ChatResponse(reply=reply)
 
 
 @router.post("/chat/stream")
 def chat_stream(req: ChatRequest):
     return StreamingResponse(
-        stream_reply(req.subject_id, req.messages),
+        stream_reply(req.subject_id, req.messages, req.documents),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",  # stops proxies like nginx from buffering the stream
+            "X-Accel-Buffering": "no",
         },
     )
