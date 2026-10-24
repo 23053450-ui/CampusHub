@@ -4,7 +4,7 @@ Request and response schemas for the Daily Quiz feature.
 
 from typing import Dict
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
 class QuizQuestion(BaseModel):
@@ -27,8 +27,21 @@ class QuizSubmissionRequest(BaseModel):
 
     answers: Dict[str, int] = Field(
         ...,
+        min_length=1,
         description="Mapping of question IDs to selected option indexes.",
     )
+
+    @field_validator("answers")
+    @classmethod
+    def validate_answers(cls, answers: Dict[str, int]) -> Dict[str, int]:
+        for question_id, selected_index in answers.items():
+            if not question_id.strip():
+                raise ValueError("Question IDs cannot be empty.")
+
+            if selected_index < 0:
+                raise ValueError("Answer indexes cannot be negative.")
+
+        return answers
 
 
 class QuizSubmissionResponse(BaseModel):
