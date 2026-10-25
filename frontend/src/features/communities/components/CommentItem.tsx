@@ -251,7 +251,7 @@ export function CommentItem({
                   openImageViewer({
                     images: comment.images!,
                     initialIndex: idx,
-                    title: `Image from u/${comment.authorHandle}`,
+                    title: `Image from ${comment.authorHandle}`,
                   });
                 }}
                 className="max-h-48 max-w-xs rounded-lg border object-cover shadow-2xs cursor-zoom-in hover:opacity-95 transition-opacity"

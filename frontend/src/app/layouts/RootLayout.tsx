@@ -59,7 +59,7 @@ function RootLayoutContent() {
   const [isStudentToolsOpen, setIsStudentToolsOpen] = usePersistentToggle("campushub:sidebar:student-tools", true);
   const [isSubjectsOpen, setIsSubjectsOpen] = usePersistentToggle("campushub:sidebar:subjects", true);
   const location = useLocation();
-  const { actions, title: customTitle } = useHeader();
+  const { actions, title: customTitle, center } = useHeader();
 
   const {
     width: sidebarWidth,
@@ -273,8 +273,8 @@ function RootLayoutContent() {
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="flex h-14 items-center justify-between border-b pl-2 pr-4 lg:pr-6 bg-background">
-          <div className="flex items-center gap-2">
+        <header className="relative flex h-14 items-center justify-between border-b pl-2 pr-4 lg:pr-6 bg-background">
+          <div className="flex items-center gap-2 shrink-0 z-10">
             <Button
               variant="ghost"
               size="icon"
@@ -285,10 +285,21 @@ function RootLayoutContent() {
               {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
             </Button>
 
-            <h1 className="text-base font-semibold text-foreground md:text-lg">{pageTitle}</h1>
+            <h1 className="text-base font-semibold text-foreground md:text-lg truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
+              {pageTitle}
+            </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Centered Header Slot */}
+          {center && (
+            <div className="absolute inset-x-0 mx-auto flex items-center justify-center pointer-events-none px-4">
+              <div className="pointer-events-auto w-full max-w-xs sm:max-w-sm md:max-w-md flex justify-center">
+                {center}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 shrink-0 z-10">
             {/* Feature Custom Header Actions */}
             {actions}
 

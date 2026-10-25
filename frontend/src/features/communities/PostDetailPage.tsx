@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "./components/ImageCarousel";
 import { FormattedText } from "./components/FormattedText";
 import { RichContentEditor } from "./components/RichContentEditor";
@@ -236,38 +237,51 @@ export default function PostDetailPage() {
           </div>
         ) : (
           <article className="space-y-3">
-            {/* Reddit-style Header Row: Single Round Back Button + Community info + Meta */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Single circular back button */}
+            {/* Header Row: Back Button + Community Avatar & Details (stacked 2-line) + Actions */}
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* Circular back button - flush left */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(backUrl)}
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                   title="Back to community"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
 
-                {/* Community avatar & tag */}
-                <div
+                {/* Community avatar */}
+                <Avatar
                   onClick={() => navigate(backUrl)}
-                  className="flex items-center gap-1.5 font-semibold text-foreground hover:underline cursor-pointer"
+                  className="h-8 w-8 shrink-0 rounded-full border cursor-pointer hover:opacity-90 transition-opacity"
                 >
-                  <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
-                    r/
-                  </div>
-                  <span>{forum?.code || "Forum"}</span>
-                </div>
+                  {forum?.imageUrl && (
+                    <AvatarImage src={forum.imageUrl} alt={forum.name} className="object-cover" />
+                  )}
+                  <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
+                    {(forum?.code || "CH").slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
 
-                <span>•</span>
-                <span>{formatTime(post.createdAt)}</span>
-                <span>•</span>
-                <span>u/{post.authorHandle}</span>
+                {/* 2-line stacked community & author meta */}
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <button
+                    type="button"
+                    onClick={() => navigate(backUrl)}
+                    className="text-left font-bold text-xs sm:text-sm text-foreground hover:underline truncate"
+                  >
+                    {forum ? `${forum.code} • ${forum.name}` : "Community"}
+                  </button>
+                  <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground truncate">
+                    <span className="font-medium text-foreground/80">{post.authorHandle}</span>
+                    <span>•</span>
+                    <span>{formatTime(post.createdAt)}</span>
+                  </div>
+                </div>
               </div>
 
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>

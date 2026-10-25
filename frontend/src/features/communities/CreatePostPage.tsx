@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -189,24 +190,42 @@ export default function CreatePostPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-2 px-3 text-xs font-semibold rounded-full border-border/80"
+                  className="h-8 gap-2 px-2.5 text-xs font-semibold rounded-full border-border/80"
                 >
-                  <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
-                    r/
-                  </div>
-                  <span>{selectedForum ? selectedForum.name : "Choose a community"}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Avatar className="h-5 w-5 rounded-full border shrink-0">
+                    {selectedForum?.imageUrl && (
+                      <AvatarImage src={selectedForum.imageUrl} alt={selectedForum.name} className="object-cover" />
+                    )}
+                    <AvatarFallback className="text-[9px] font-bold bg-primary/10 text-primary">
+                      {(selectedForum?.code || "CH").slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate max-w-[200px]">
+                    {selectedForum ? `${selectedForum.code} • ${selectedForum.name}` : "Choose a community"}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 max-h-64 overflow-y-auto">
+              <DropdownMenuContent align="start" className="w-72 max-h-64 overflow-y-auto">
                 {forums.map((f) => (
                   <DropdownMenuItem
                     key={f.id}
                     onClick={() => setSelectedForum(f)}
-                    className="flex items-center justify-between text-xs"
+                    className="flex items-center justify-between text-xs gap-2 py-1.5"
                   >
-                    <span className="truncate">{f.name}</span>
-                    {selectedForum?.id === f.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Avatar className="h-5 w-5 rounded-full border shrink-0">
+                        {f.imageUrl && <AvatarImage src={f.imageUrl} alt={f.name} className="object-cover" />}
+                        <AvatarFallback className="text-[9px] font-bold bg-primary/10 text-primary">
+                          {f.code.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="truncate">
+                        <span className="font-semibold text-foreground">{f.code}</span>
+                        <span className="text-muted-foreground ml-1.5">{f.name}</span>
+                      </div>
+                    </div>
+                    {selectedForum?.id === f.id && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>

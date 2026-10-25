@@ -16,6 +16,7 @@ export interface SubjectForum {
   memberCount: number;
   isPinned?: boolean;
   description?: string;
+  imageUrl?: string | null;
 }
 
 export interface Post {

@@ -22,6 +22,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 1200,
     isPinned: false,
     description: "Discussion forum and academic resource archive for DBMS course.",
+    imageUrl: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=100&auto=format&fit=crop&q=80",
   },
   {
     id: "cs302",
@@ -30,6 +31,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 980,
     isPinned: false,
     description: "OSI stack, TCP/IP, routing protocols, and lab assignments.",
+    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=100&auto=format&fit=crop&q=80",
   },
   {
     id: "cs303",
@@ -38,6 +40,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 1100,
     isPinned: false,
     description: "Concurrency, scheduling, memory paging, and Unix kernel calls.",
+    imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&auto=format&fit=crop&q=80",
   },
   {
     id: "cs304",
@@ -46,6 +49,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 1540,
     isPinned: false,
     description: "Trees, graphs, dynamic programming, sorting, and complexity.",
+    imageUrl: "https://images.unsplash.com/photo-1516116211227-bbc6732f790c?w=100&auto=format&fit=crop&q=80",
   },
   {
     id: "ee101",
@@ -54,6 +58,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 850,
     isPinned: false,
     description: "Circuit analysis, AC/DC transients, transformers, and theorems.",
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=100&auto=format&fit=crop&q=80",
   },
   {
     id: "me102",
@@ -62,6 +67,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 620,
     isPinned: true,
     description: "Orthographic projections, isometric views, and CAD models.",
+    imageUrl: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=100&auto=format&fit=crop&q=80",
   },
   {
     id: "cs305",
@@ -70,6 +76,7 @@ const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
     memberCount: 950,
     isPinned: true,
     description: "Advanced algorithmic paradigms, NP-completeness, and greedy heuristics.",
+    imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=100&auto=format&fit=crop&q=80",
   },
 ];
 

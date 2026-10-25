@@ -69,7 +69,7 @@ export function PostCard({ post, onVote }: PostCardProps) {
             </AvatarFallback>
           </Avatar>
           <span className="font-medium text-foreground hover:underline">
-            u/{post.authorHandle}
+            {post.authorHandle}
           </span>
         </div>
         <div className="flex items-center gap-1">

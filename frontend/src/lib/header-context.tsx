@@ -11,6 +11,8 @@ interface HeaderContextType {
   setTitle: (title: React.ReactNode | null) => void;
   actions: React.ReactNode | null;
   setActions: (actions: React.ReactNode | null) => void;
+  center: React.ReactNode | null;
+  setCenter: (center: React.ReactNode | null) => void;
 }
 
 const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
@@ -18,10 +20,11 @@ const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
 export function HeaderProvider({ children }: { children: React.ReactNode }) {
   const [title, setTitle] = useState<React.ReactNode | null>(null);
   const [actions, setActions] = useState<React.ReactNode | null>(null);
+  const [center, setCenter] = useState<React.ReactNode | null>(null);
 
   const value = useMemo(
-    () => ({ title, setTitle, actions, setActions }),
-    [title, actions]
+    () => ({ title, setTitle, actions, setActions, center, setCenter }),
+    [title, actions, center]
   );
 
   return <HeaderContext.Provider value={value}>{children}</HeaderContext.Provider>;
@@ -46,6 +49,21 @@ export function HeaderActions({ children }: { children: React.ReactNode }) {
     setActions(children);
     return () => setActions(null);
   }, [children, setActions]);
+
+  return null;
+}
+
+/**
+ * Declarative component for features to inject centered elements into the top main header.
+ * Automatically clears centered content when the component unmounts.
+ */
+export function HeaderCenter({ children }: { children: React.ReactNode }) {
+  const { setCenter } = useHeader();
+
+  useEffect(() => {
+    setCenter(children);
+    return () => setCenter(null);
+  }, [children, setCenter]);
 
   return null;
 }
