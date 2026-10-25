@@ -20,6 +20,7 @@ import type { Subject } from "@/shared/user";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
 import { useResizable } from "@/lib/use-resizable";
 import { ResizeHandle } from "@/components/ui/resize-handle";
+import { Toaster } from "@/components/ui/sonner";
 
 const subjects: Subject[] = [
   { id: "cs301", name: "Database Management Systems", code: "CS301" },
@@ -86,20 +87,21 @@ function RootLayoutContent() {
       {/* Sidebar with toggle */}
       <aside
         style={{
-          width: `${sidebarWidth}px`,
-          marginLeft: isSidebarOpen ? 0 : `-${sidebarWidth}px`,
+          width: isSidebarOpen ? `${sidebarWidth}px` : 0,
         }}
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card md:static relative shrink-0 ${
-          isSidebarDragging ? "" : "transition-[margin,transform] duration-200 ease-in-out"
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col bg-card md:static relative shrink-0 overflow-hidden ${
+          isSidebarDragging ? "" : "transition-[width] duration-200 ease-in-out"
         } ${
           isSidebarOpen
-            ? "translate-x-0 overflow-visible"
-            : "-translate-x-full md:translate-x-0 overflow-hidden md:border-r-0"
+            ? "translate-x-0 overflow-visible border-r"
+            : "-translate-x-full md:translate-x-0 overflow-hidden border-r-0 pointer-events-none"
         }`}
       >
         <div
           style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
-          className="flex h-full flex-col justify-between p-4 overflow-y-auto"
+          className={`flex h-full flex-col justify-between p-4 overflow-y-auto transition-transform duration-200 ease-in-out ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         >
           <div className="space-y-6">
             {/* App Logo */}
@@ -298,6 +300,8 @@ function RootLayoutContent() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
+
+        <Toaster position="bottom-right" richColors />
       </div>
     </div>
   );

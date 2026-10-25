@@ -95,6 +95,7 @@ export const realCommunitiesService: CommunitiesService = {
         title: row.title,
         body: row.body,
         imageUrl: row.image_url,
+        images: row.images || (row.image_url ? [row.image_url] : []),
         upvotes: row.upvotes ?? 0,
         downvotes: row.downvotes ?? 0,
         replyCount: row.reply_count ?? 0,
@@ -103,6 +104,62 @@ export const realCommunitiesService: CommunitiesService = {
       }));
 
       return { data: posts, error: null };
+    } catch (err: unknown) {
+      return {
+        data: null,
+        error: { code: "NETWORK", message: (err as Error).message },
+      };
+    }
+  },
+
+  async getPost(postId: string): Promise<Result<Post>> {
+    try {
+      const { data: row, error } = await supabase
+        .from("posts")
+        .select("*, profiles!posts_author_id_fkey(handle, avatar_url)")
+        .eq("id", postId)
+        .single();
+
+      if (error || !row) {
+        return {
+          data: null,
+          error: { code: "NOT_FOUND", message: error?.message || "Post not found" },
+        };
+      }
+
+      const user = (await supabase.auth.getUser()).data.user;
+      let currentUserVote: 1 | -1 | null = null;
+      if (user) {
+        const { data: voteData } = await supabase
+          .from("post_votes")
+          .select("vote")
+          .eq("post_id", postId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (voteData) {
+          currentUserVote = voteData.vote as 1 | -1;
+        }
+      }
+
+      const post: Post = {
+        id: row.id,
+        subjectId: row.subject_id,
+        authorId: row.author_id,
+        authorHandle: row.profiles?.handle || "Anonymous",
+        authorAvatarUrl: row.profiles?.avatar_url || null,
+        title: row.title,
+        body: row.body || "",
+        imageUrl: row.image_url || null,
+        images: row.images || (row.image_url ? [row.image_url] : []),
+        upvotes: row.upvotes ?? 0,
+        downvotes: row.downvotes ?? 0,
+        replyCount: row.reply_count ?? 0,
+        createdAt: row.created_at,
+        currentUserVote,
+      };
+
+      return { data: post, error: null };
     } catch (err: unknown) {
       return {
         data: null,
@@ -121,14 +178,49 @@ export const realCommunitiesService: CommunitiesService = {
         };
       }
 
+      const trimmedTitle = (data.title || "").trim();
+      if (!trimmedTitle) {
+        return {
+          data: null,
+          error: { code: "VALIDATION", message: "Post title is required." },
+        };
+      }
+      if (trimmedTitle.length > 300) {
+        return {
+          data: null,
+          error: { code: "VALIDATION", message: "Post title cannot exceed 300 characters." },
+        };
+      }
+
+      if (data.body && data.body.length > 2000) {
+        return {
+          data: null,
+          error: { code: "VALIDATION", message: "Post body cannot exceed 2000 characters." },
+        };
+      }
+
+      const images = data.images && data.images.length > 0
+        ? data.images
+        : data.imageUrl
+        ? [data.imageUrl]
+        : [];
+
+      if (images.length > 5) {
+        return {
+          data: null,
+          error: { code: "VALIDATION", message: "Maximum of 5 images allowed per post." },
+        };
+      }
+
       const { data: inserted, error } = await supabase
         .from("posts")
         .insert({
           subject_id: data.subjectId,
           author_id: user.id,
-          title: data.title,
-          body: data.body,
-          image_url: data.imageUrl || null,
+          title: trimmedTitle,
+          body: data.body ? data.body.trim() : "",
+          image_url: images[0] || null,
+          images: images,
         })
         .select("*, profiles!posts_author_id_fkey(handle, avatar_url)")
         .single();
@@ -149,6 +241,7 @@ export const realCommunitiesService: CommunitiesService = {
         title: inserted.title,
         body: inserted.body,
         imageUrl: inserted.image_url,
+        images: images,
         upvotes: 0,
         downvotes: 0,
         replyCount: 0,
@@ -220,10 +313,15 @@ export const realCommunitiesService: CommunitiesService = {
       const comments: Comment[] = (data || []).map((row: any) => ({
         id: row.id,
         postId: row.post_id,
+        parentId: row.parent_id || null,
+        depth: row.depth ?? 0,
         authorId: row.author_id,
         authorHandle: row.profiles?.handle || "Anonymous",
         authorAvatarUrl: row.profiles?.avatar_url || null,
         body: row.body,
+        images: row.image_urls || [],
+        upvotes: row.upvotes ?? 0,
+        downvotes: row.downvotes ?? 0,
         createdAt: row.created_at,
       }));
 
@@ -236,8 +334,34 @@ export const realCommunitiesService: CommunitiesService = {
     }
   },
 
-  async createComment(postId: string, body: string): Promise<Result<Comment>> {
+  async createComment(
+    postId: string,
+    body: string,
+    parentId?: string | null,
+    images?: string[]
+  ): Promise<Result<Comment>> {
     try {
+      const trimmedBody = (body || "").trim();
+      if (!trimmedBody || trimmedBody.length > 2000) {
+        return {
+          data: null,
+          error: {
+            code: "VALIDATION",
+            message: "Comment body must be between 1 and 2,000 characters.",
+          },
+        };
+      }
+
+      if (images && images.length > 2) {
+        return {
+          data: null,
+          error: {
+            code: "VALIDATION",
+            message: "A comment reply can attach at most 2 images.",
+          },
+        };
+      }
+
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) {
         return {
@@ -246,13 +370,57 @@ export const realCommunitiesService: CommunitiesService = {
         };
       }
 
+      // If parent is given, verify depth < 11
+      if (parentId) {
+        const { data: parentComment, error: parentError } = await supabase
+          .from("comments")
+          .select("id, post_id, depth")
+          .eq("id", parentId)
+          .single();
+
+        if (parentError || !parentComment) {
+          return {
+            data: null,
+            error: { code: "NOT_FOUND", message: "Parent comment not found" },
+          };
+        }
+
+        if (parentComment.post_id !== postId) {
+          return {
+            data: null,
+            error: {
+              code: "VALIDATION",
+              message: "Cannot reply to a comment belonging to another post.",
+            },
+          };
+        }
+
+        if (parentComment.depth >= 11) {
+          return {
+            data: null,
+            error: {
+              code: "VALIDATION",
+              message: "Maximum comment nesting depth (12 levels) reached.",
+            },
+          };
+        }
+      }
+
+      const insertPayload: Record<string, any> = {
+        post_id: postId,
+        author_id: user.id,
+        body: trimmedBody,
+      };
+      if (parentId) {
+        insertPayload.parent_id = parentId;
+      }
+      if (images && images.length > 0) {
+        insertPayload.image_urls = images;
+      }
+
       const { data: inserted, error } = await supabase
         .from("comments")
-        .insert({
-          post_id: postId,
-          author_id: user.id,
-          body,
-        })
+        .insert(insertPayload)
         .select("*, profiles!comments_author_id_fkey(handle, avatar_url)")
         .single();
 
@@ -266,11 +434,17 @@ export const realCommunitiesService: CommunitiesService = {
       const comment: Comment = {
         id: inserted.id,
         postId: inserted.post_id,
+        parentId: inserted.parent_id || null,
+        depth: inserted.depth ?? 0,
         authorId: inserted.author_id,
         authorHandle: inserted.profiles?.handle || "Anonymous",
         authorAvatarUrl: inserted.profiles?.avatar_url || null,
         body: inserted.body,
+        images: inserted.image_urls || [],
+        upvotes: 0,
+        downvotes: 0,
         createdAt: inserted.created_at,
+        currentUserVote: null,
       };
 
       return { data: comment, error: null };
@@ -282,9 +456,15 @@ export const realCommunitiesService: CommunitiesService = {
     }
   },
 
+  async voteComment(commentId: string, voteValue: 1 | -1 | null): Promise<Result<{ upvotes: number; downvotes: number; currentUserVote: 1 | -1 | null }>> {
+    return {
+      data: { upvotes: 1, downvotes: 0, currentUserVote: voteValue },
+      error: null,
+    };
+  },
+
   async getResources(subjectId: string, type: ResourceType): Promise<Result<ResourceNote[]>> {
     try {
-      const tagFilter = type === "PYQ" ? "PYQ" : "Lecture";
       let query = supabase
         .from("notes")
         .select("*, profiles!notes_user_id_fkey(handle)")

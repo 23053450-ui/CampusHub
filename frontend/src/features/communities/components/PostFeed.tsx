@@ -4,8 +4,9 @@
  * @owner Communities Team
  */
 
-import React, { useState } from "react";
-import { Plus, SlidersHorizontal, MessageSquareDashed } from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, MessageSquareDashed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,38 +16,42 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PostCard } from "./PostCard";
-import { PostComposer } from "./PostComposer";
-import { ThreadComments } from "./ThreadComments";
 import type { Post } from "../services/types";
 
 interface PostFeedProps {
   posts: Post[];
   isLoading: boolean;
   subjectName: string;
+  subjectId?: string;
   sortBy: "new" | "top" | "hot";
   onSortChange: (sort: "new" | "top" | "hot") => void;
   onVote: (postId: string, vote: 1 | -1 | null) => void;
-  onCreatePost: (title: string, body: string) => Promise<void>;
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
 export function PostFeed({
   posts,
   isLoading,
   subjectName,
+  subjectId,
   sortBy,
   onSortChange,
   onVote,
-  onCreatePost,
-  onRefresh,
 }: PostFeedProps) {
-  const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const [activeCommentPost, setActiveCommentPost] = useState<Post | null>(null);
+  const navigate = useNavigate();
 
   const sortLabels: Record<string, string> = {
     new: "New",
     top: "Top",
     hot: "Hot",
+  };
+
+  const handleOpenCreatePost = () => {
+    if (subjectId) {
+      navigate(`/communities/${subjectId}/new`);
+    } else {
+      navigate("/communities/new");
+    }
   };
 
   return (
@@ -69,7 +74,7 @@ export function PostFeed({
 
         <Button
           size="sm"
-          onClick={() => setIsComposerOpen(true)}
+          onClick={handleOpenCreatePost}
           className="h-8 gap-1.5 text-xs font-semibold shadow-xs"
         >
           <Plus className="h-3.5 w-3.5" />
@@ -93,7 +98,7 @@ export function PostFeed({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setIsComposerOpen(true)}
+            onClick={handleOpenCreatePost}
             className="mt-2 text-xs"
           >
             Start a discussion
@@ -106,28 +111,10 @@ export function PostFeed({
               key={post.id}
               post={post}
               onVote={onVote}
-              onOpenComments={(p) => setActiveCommentPost(p)}
             />
           ))}
         </div>
       )}
-
-      {/* Composer Modal */}
-      <PostComposer
-        isOpen={isComposerOpen}
-        onClose={() => setIsComposerOpen(false)}
-        onSubmit={onCreatePost}
-        subjectName={subjectName}
-      />
-
-      {/* Comments Modal */}
-      <ThreadComments
-        post={activeCommentPost}
-        isOpen={!!activeCommentPost}
-        onClose={() => setActiveCommentPost(null)}
-        onCommentAdded={onRefresh}
-      />
     </div>
   );
 }
-

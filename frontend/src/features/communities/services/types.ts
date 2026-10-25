@@ -25,8 +25,9 @@ export interface Post {
   authorHandle: string;
   authorAvatarUrl?: string | null;
   title: string;
-  body: string;
-  imageUrl: string | null;
+  body?: string;
+  imageUrl?: string | null;
+  images?: string[];
   upvotes: number;
   downvotes: number;
   replyCount: number;
@@ -37,11 +38,18 @@ export interface Post {
 export interface Comment {
   id: string;
   postId: string;
+  parentId?: string | null;
+  depth?: number;
   authorId: string;
   authorHandle: string;
   authorAvatarUrl?: string | null;
   body: string;
+  images?: string[];
+  upvotes?: number;
+  downvotes?: number;
+  currentUserVote?: 1 | -1 | null;
   createdAt: string;
+  children?: Comment[];
 }
 
 export interface ResourceNote {
@@ -59,15 +67,23 @@ export interface ResourceNote {
 export interface CommunitiesService {
   getSubjectForums(): Promise<Result<SubjectForum[]>>;
   getPosts(subjectId: string, sort?: "new" | "top" | "hot"): Promise<Result<Post[]>>;
+  getPost(postId: string): Promise<Result<Post>>;
   createPost(data: {
     subjectId: string;
     title: string;
-    body: string;
+    body?: string;
     imageUrl?: string | null;
+    images?: string[];
   }): Promise<Result<Post>>;
   votePost(postId: string, voteValue: 1 | -1 | null): Promise<Result<{ upvotes: number; downvotes: number; currentUserVote: 1 | -1 | null }>>;
   getComments(postId: string): Promise<Result<Comment[]>>;
-  createComment(postId: string, body: string): Promise<Result<Comment>>;
+  createComment(
+    postId: string,
+    body: string,
+    parentId?: string | null,
+    images?: string[]
+  ): Promise<Result<Comment>>;
+  voteComment?(commentId: string, voteValue: 1 | -1 | null): Promise<Result<{ upvotes: number; downvotes: number; currentUserVote: 1 | -1 | null }>>;
   getResources(subjectId: string, type: ResourceType): Promise<Result<ResourceNote[]>>;
   uploadResource(data: {
     subjectId: string;

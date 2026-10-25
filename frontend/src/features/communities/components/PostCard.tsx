@@ -1,22 +1,28 @@
 /**
  * @file PostCard.tsx
- * @description Card component for previewing discussion threads with upvoting and comment count.
+ * @description Card component for previewing discussion threads with upvoting, carousel preview, and comment count.
  * @owner Communities Team
  */
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowBigUp, ArrowBigDown, MessageSquare, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { ImageCarousel } from "./ImageCarousel";
 import type { Post } from "../services/types";
 
 interface PostCardProps {
   post: Post;
   onVote: (postId: string, vote: 1 | -1 | null) => void;
-  onOpenComments: (post: Post) => void;
 }
 
-export function PostCard({ post, onVote, onOpenComments }: PostCardProps) {
+export function PostCard({ post, onVote }: PostCardProps) {
+  const navigate = useNavigate();
+
+  const handleOpenPost = () => {
+    navigate(`/communities/${post.subjectId}/post/${post.id}`);
+  };
+
   const handleUpvote = (e: React.MouseEvent) => {
     e.stopPropagation();
     const newVote = post.currentUserVote === 1 ? null : 1;
@@ -42,9 +48,15 @@ export function PostCard({ post, onVote, onOpenComments }: PostCardProps) {
     return `${days}d ago`;
   };
 
+  const postImages = post.images && post.images.length > 0
+    ? post.images
+    : post.imageUrl
+    ? [post.imageUrl]
+    : [];
+
   return (
     <div
-      onClick={() => onOpenComments(post)}
+      onClick={handleOpenPost}
       className="group rounded-xl border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-xs cursor-pointer select-none space-y-3"
     >
       {/* Author and metadata */}
@@ -57,7 +69,7 @@ export function PostCard({ post, onVote, onOpenComments }: PostCardProps) {
             </AvatarFallback>
           </Avatar>
           <span className="font-medium text-foreground hover:underline">
-            {post.authorHandle}
+            u/{post.authorHandle}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -66,21 +78,34 @@ export function PostCard({ post, onVote, onOpenComments }: PostCardProps) {
         </div>
       </div>
 
-      {/* Post Title & Body */}
+      {/* Post Title */}
       <div>
         <h3 className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
           {post.title}
         </h3>
-        {post.body && (
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
-            {post.body}
-          </p>
-        )}
       </div>
+
+      {/* Image Carousel (Renders above body text if images exist) */}
+      {postImages.length > 0 && (
+        <div className="pt-0.5">
+          <ImageCarousel
+            images={postImages}
+            title={post.title}
+            aspectClass="max-h-[380px] min-h-[200px]"
+          />
+        </div>
+      )}
+
+      {/* Body preview (optional) */}
+      {post.body && post.body.trim().length > 0 && (
+        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3">
+          {post.body}
+        </p>
+      )}
 
       {/* Post Footer Actions: Upvote/Downvote & Comments */}
       <div className="flex items-center gap-3 pt-1">
-        {/* Voting capsule */}
+        {/* Voting capsule (same color for upvote and downvote) */}
         <div
           className="flex items-center rounded-lg border bg-secondary/50 px-1 py-0.5"
           onClick={(e) => e.stopPropagation()}
@@ -99,14 +124,12 @@ export function PostCard({ post, onVote, onOpenComments }: PostCardProps) {
           </button>
           <span
             className={`px-1 text-xs font-semibold ${
-              post.currentUserVote === 1
+              post.currentUserVote !== null
                 ? "text-primary"
-                : post.currentUserVote === -1
-                ? "text-destructive"
                 : "text-foreground"
             }`}
           >
-            {post.upvotes}
+            {post.upvotes - post.downvotes}
           </span>
 
           <button
@@ -114,34 +137,28 @@ export function PostCard({ post, onVote, onOpenComments }: PostCardProps) {
             onClick={handleDownvote}
             className={`p-1 rounded-sm transition-colors hover:bg-muted ${
               post.currentUserVote === -1
-                ? "text-destructive font-bold"
+                ? "text-primary font-bold"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             title="Downvote"
           >
-            <ArrowBigDown className={`h-4 w-4 ${post.currentUserVote === -1 ? "fill-destructive" : ""}`} />
+            <ArrowBigDown className={`h-4 w-4 ${post.currentUserVote === -1 ? "fill-primary" : ""}`} />
           </button>
-          {post.downvotes > 0 && (
-            <span className="pr-1 text-xs font-semibold text-muted-foreground">
-              {post.downvotes}
-            </span>
-          )}
         </div>
 
-        {/* Reply Count Capsule */}
+        {/* Reply Count Capsule (clicking opens post) */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onOpenComments(post);
+            handleOpenPost();
           }}
           className="flex items-center gap-1.5 rounded-lg border bg-secondary/30 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
         >
           <MessageSquare className="h-3.5 w-3.5" />
-          <span>{post.replyCount}</span>
+          <span>{post.replyCount} comments</span>
         </button>
       </div>
     </div>
   );
 }
-

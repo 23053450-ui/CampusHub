@@ -60,12 +60,11 @@ export default function SubjectWorkspaceLayout() {
       {/* Right Sidebar: AI Companion Study Panel */}
       <aside
         style={{
-          width: `${aiPanelWidth}px`,
-          marginRight: isOpen ? 0 : `-${aiPanelWidth}px`,
+          width: isOpen ? `${aiPanelWidth}px` : 0,
         }}
-        className={`border-l bg-card shrink-0 relative flex flex-col ${
-          isAiDragging ? "" : "transition-[margin] duration-200 ease-in-out"
-        } ${isOpen ? "overflow-visible" : "overflow-hidden"}`}
+        className={`bg-card shrink-0 relative flex flex-col overflow-hidden ${
+          isAiDragging ? "" : "transition-[width] duration-200 ease-in-out"
+        } ${isOpen ? "border-l overflow-visible" : "border-l-0 pointer-events-none"}`}
       >
         {isOpen && (
           <ResizeHandle
@@ -76,7 +75,9 @@ export default function SubjectWorkspaceLayout() {
         )}
         <div
           style={{ width: `${aiPanelWidth}px`, minWidth: `${aiPanelWidth}px` }}
-          className="flex-1 overflow-auto"
+          className={`flex-1 overflow-auto transition-transform duration-200 ease-in-out ${
+            isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
         >
           <SubjectAiPanelPage />
         </div>
