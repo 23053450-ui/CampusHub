@@ -25,10 +25,22 @@ def _clean(text: str) -> str:
     return text.replace("</document>", "").replace("<document", "")
 
 
-def _build_system_prompt(subject_id: str, documents: list[ContextDocument]) -> str:
+def _build_system_prompt(
+    subject_id: str,
+    documents: list[ContextDocument],
+    subject_name: str | None = None,
+) -> str:
+    if subject_name:
+        clean_name = " ".join(subject_name.split())  # collapse newlines and extra spaces
+        subject = f"{clean_name} (course code {subject_id})"
+    else:
+        subject = f"the course with code '{subject_id}'"
+
     prompt = (
-        f"You are a study assistant for the university subject '{subject_id}'. "
+        f"You are a study assistant for the university subject {subject}. "
         "Explain concepts clearly and concisely for undergraduate students. "
+        "Do not greet the student and do not repeat the course code. "
+        "Relate answers to this subject where it helps. "
         "If you are unsure, say so instead of guessing."
     )
 
@@ -52,6 +64,7 @@ def _build_request(
     subject_id: str,
     messages: list[Message],
     documents: list[ContextDocument],
+    subject_name: str | None = None,
 ):
     """Validate input and build the Gemini request. Raises before any streaming starts."""
     if messages[-1].role != "user":
@@ -67,7 +80,7 @@ def _build_request(
     ]
 
     config = types.GenerateContentConfig(
-        system_instruction=_build_system_prompt(subject_id, documents)
+        system_instruction=_build_system_prompt(subject_id, documents, subject_name)
     )
     return contents, config
 
@@ -76,8 +89,9 @@ def generate_reply(
     subject_id: str,
     messages: list[Message],
     documents: list[ContextDocument],
+    subject_name: str | None = None,
 ) -> str:
-    contents, config = _build_request(subject_id, messages, documents)
+    contents, config = _build_request(subject_id, messages, documents, subject_name)
     try:
         response = get_client().models.generate_content(
             model=settings.gemini_model,
@@ -101,9 +115,10 @@ def stream_reply(
     subject_id: str,
     messages: list[Message],
     documents: list[ContextDocument],
+    subject_name: str | None = None,
 ) -> Iterator[str]:
     # These run immediately, so failures still produce a proper 400/500 status.
-    contents, config = _build_request(subject_id, messages, documents)
+    contents, config = _build_request(subject_id, messages, documents, subject_name)
     client = get_client()
 
     def event_stream() -> Iterator[str]:

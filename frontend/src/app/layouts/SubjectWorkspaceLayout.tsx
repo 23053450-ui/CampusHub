@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { PanelRight, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderActions } from "@/lib/header-context";
@@ -13,10 +13,12 @@ import { useResizable } from "@/lib/use-resizable";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import SubjectAiPanelPage from "@/features/subject-ai-panel/SubjectAiPanelPage";
+import { getSubjectById } from "@/shared/subjects";
 
 export default function SubjectWorkspaceLayout() {
   const [isOpen, setIsOpen] = usePersistentToggle("campushub:sidebar:ai-panel", true);
-
+  const { subjectId } = useParams<{ subjectId: string }>();
+  const subjectName = getSubjectById(subjectId)?.name;
   const {
     width: aiPanelWidth,
     isDragging: isAiDragging,
@@ -80,9 +82,10 @@ export default function SubjectWorkspaceLayout() {
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <SubjectAiPanelPage />
+          <SubjectAiPanelPage subjectName={subjectName} />
         </div>
       </aside>
     </div>
+    
   );
 }

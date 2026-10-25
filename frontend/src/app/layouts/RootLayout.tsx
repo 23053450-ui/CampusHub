@@ -16,20 +16,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Subject } from "@/shared/user";
+import { subjects } from "@/shared/subjects";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
 import { ImageViewerProvider } from "@/lib/image-viewer-context";
 import { useResizable } from "@/lib/use-resizable";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Toaster } from "@/components/ui/sonner";
-
-const subjects: Subject[] = [
-  { id: "cs301", name: "Database Management Systems", code: "CS301" },
-  { id: "cs302", name: "Computer Networks", code: "CS302" },
-  { id: "cs303", name: "Operating Systems", code: "CS303" },
-  { id: "cs304", name: "Design and Analysis of Algorithms", code: "CS304" },
-];
 
 const studentTools = [
   { to: "/project-analysis", label: "Project Analysis", icon: GitBranch },
