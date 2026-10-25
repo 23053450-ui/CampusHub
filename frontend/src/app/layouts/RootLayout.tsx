@@ -72,9 +72,7 @@ function RootLayoutContent() {
 
   const pageTitle = customTitle || getPageTitle(location.pathname);
 
-  const isStudentToolsActive = studentTools.some((tool) =>
-    location.pathname.startsWith(tool.to)
-  );
+  const isStudentToolsActive = studentTools.some((tool) => location.pathname.startsWith(tool.to));
   const isSubjectsActive = location.pathname.startsWith("/subjects");
 
   const closeSidebarOnMobile = () => {
@@ -87,20 +85,22 @@ function RootLayoutContent() {
     <div className="flex min-h-screen bg-background text-foreground">
       {/* Sidebar with toggle */}
       <aside
-        style={
-          isSidebarOpen
-            ? ({ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties)
-            : undefined
-        }
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card md:static relative ${
-          isSidebarDragging ? "" : "transition-[width] duration-200"
+        style={{
+          width: `${sidebarWidth}px`,
+          marginLeft: isSidebarOpen ? 0 : `-${sidebarWidth}px`,
+        }}
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card md:static relative shrink-0 ${
+          isSidebarDragging ? "" : "transition-[margin,transform] duration-200 ease-in-out"
         } ${
           isSidebarOpen
-            ? "w-64 md:w-[var(--sidebar-width,16rem)] translate-x-0 shrink-0"
-            : "-translate-x-full md:w-0 md:translate-x-0 md:border-r-0 md:overflow-hidden shrink-0"
+            ? "translate-x-0 overflow-visible"
+            : "-translate-x-full md:translate-x-0 overflow-hidden md:border-r-0"
         }`}
       >
-        <div className="flex h-full w-full flex-col justify-between p-4 overflow-y-auto">
+        <div
+          style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+          className="flex h-full flex-col justify-between p-4 overflow-y-auto"
+        >
           <div className="space-y-6">
             {/* App Logo */}
             <Link
@@ -269,25 +269,19 @@ function RootLayoutContent() {
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="flex h-14 items-center justify-between border-b px-4 lg:px-6 bg-background">
-          <div className="flex items-center gap-3">
+        <header className="flex h-14 items-center justify-between border-b pl-2 pr-4 lg:pr-6 bg-background">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen((prev) => !prev)}
               aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
-              className="text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
             >
-              {isSidebarOpen ? (
-                <PanelLeftClose className="h-5 w-5" />
-              ) : (
-                <PanelLeft className="h-5 w-5" />
-              )}
+              {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
             </Button>
 
-            <h1 className="text-base font-semibold text-foreground md:text-lg">
-              {pageTitle}
-            </h1>
+            <h1 className="text-base font-semibold text-foreground md:text-lg">{pageTitle}</h1>
           </div>
 
           <div className="flex items-center gap-2">

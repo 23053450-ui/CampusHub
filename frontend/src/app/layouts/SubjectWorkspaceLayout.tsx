@@ -59,18 +59,13 @@ export default function SubjectWorkspaceLayout() {
 
       {/* Right Sidebar: AI Companion Study Panel */}
       <aside
-        style={
-          isOpen
-            ? ({ "--ai-panel-width": `${aiPanelWidth}px` } as React.CSSProperties)
-            : undefined
-        }
+        style={{
+          width: `${aiPanelWidth}px`,
+          marginRight: isOpen ? 0 : `-${aiPanelWidth}px`,
+        }}
         className={`border-l bg-card shrink-0 relative flex flex-col ${
-          isAiDragging ? "" : "transition-[width] duration-200 ease-in-out"
-        } ${
-          isOpen
-            ? "w-[var(--ai-panel-width,24rem)] overflow-visible"
-            : "w-0 border-l-0 overflow-hidden"
-        }`}
+          isAiDragging ? "" : "transition-[margin] duration-200 ease-in-out"
+        } ${isOpen ? "overflow-visible" : "overflow-hidden"}`}
       >
         {isOpen && (
           <ResizeHandle
@@ -79,7 +74,10 @@ export default function SubjectWorkspaceLayout() {
             {...aiHandleProps}
           />
         )}
-        <div className="flex-1 overflow-auto w-full">
+        <div
+          style={{ width: `${aiPanelWidth}px`, minWidth: `${aiPanelWidth}px` }}
+          className="flex-1 overflow-auto"
+        >
           <SubjectAiPanelPage />
         </div>
       </aside>

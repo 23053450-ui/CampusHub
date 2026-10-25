@@ -1,5 +1,80 @@
 /**
  * @file types.ts
- * @description Service interface and types for Communities feature.
+ * @description Service interface and data models for Communities feature.
  * @owner Communities Team
  */
+
+import type { Result } from "@/shared/result";
+
+export type ResourceCategory = "All" | "Day wise" | "Unit wise" | "Other";
+export type ResourceType = "Note" | "PYQ";
+
+export interface SubjectForum {
+  id: string;
+  name: string;
+  code: string;
+  memberCount: number;
+  isPinned?: boolean;
+  description?: string;
+}
+
+export interface Post {
+  id: string;
+  subjectId: string;
+  authorId: string;
+  authorHandle: string;
+  authorAvatarUrl?: string | null;
+  title: string;
+  body: string;
+  imageUrl: string | null;
+  upvotes: number;
+  downvotes: number;
+  replyCount: number;
+  createdAt: string;
+  currentUserVote?: 1 | -1 | null;
+}
+
+export interface Comment {
+  id: string;
+  postId: string;
+  authorId: string;
+  authorHandle: string;
+  authorAvatarUrl?: string | null;
+  body: string;
+  createdAt: string;
+}
+
+export interface ResourceNote {
+  id: string;
+  subjectId: string;
+  title: string;
+  type: ResourceType; // "Note" | "PYQ"
+  category: ResourceCategory; // "Day wise" | "Unit wise" | "Other"
+  uploaderHandle: string;
+  pageCount: number;
+  storagePath: string;
+  createdAt: string;
+}
+
+export interface CommunitiesService {
+  getSubjectForums(): Promise<Result<SubjectForum[]>>;
+  getPosts(subjectId: string, sort?: "new" | "top" | "hot"): Promise<Result<Post[]>>;
+  createPost(data: {
+    subjectId: string;
+    title: string;
+    body: string;
+    imageUrl?: string | null;
+  }): Promise<Result<Post>>;
+  votePost(postId: string, voteValue: 1 | -1 | null): Promise<Result<{ upvotes: number; downvotes: number; currentUserVote: 1 | -1 | null }>>;
+  getComments(postId: string): Promise<Result<Comment[]>>;
+  createComment(postId: string, body: string): Promise<Result<Comment>>;
+  getResources(subjectId: string, type: ResourceType): Promise<Result<ResourceNote[]>>;
+  uploadResource(data: {
+    subjectId: string;
+    title: string;
+    type: ResourceType;
+    category?: ResourceCategory;
+    pageCount?: number;
+    file?: File;
+  }): Promise<Result<ResourceNote>>;
+}
