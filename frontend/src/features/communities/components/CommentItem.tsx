@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { FormattedText } from "./FormattedText";
 import { RichContentEditor } from "./RichContentEditor";
 import { processCommunityImage } from "../utils/imagePipeline";
+import { useImageViewer } from "@/lib/image-viewer-context";
 import { toast } from "sonner";
 import type { Comment } from "../services/types";
 
@@ -77,6 +78,7 @@ export function CommentItem({
   onReply,
   onVoteComment,
 }: CommentItemProps) {
+  const { openImageViewer } = useImageViewer();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -244,8 +246,17 @@ export function CommentItem({
                 key={idx}
                 src={imgUrl}
                 alt={`Attachment ${idx + 1}`}
-                className="max-h-48 max-w-xs rounded-lg border object-cover shadow-2xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openImageViewer({
+                    images: comment.images!,
+                    initialIndex: idx,
+                    title: `Image from u/${comment.authorHandle}`,
+                  });
+                }}
+                className="max-h-48 max-w-xs rounded-lg border object-cover shadow-2xs cursor-zoom-in hover:opacity-95 transition-opacity"
                 loading="lazy"
+                title="Click to expand full screen"
               />
             ))}
           </div>

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Subject } from "@/shared/user";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
+import { ImageViewerProvider } from "@/lib/image-viewer-context";
 import { useResizable } from "@/lib/use-resizable";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Toaster } from "@/components/ui/sonner";
@@ -310,7 +311,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <HeaderProvider>
-      <RootLayoutContent />
+      <ImageViewerProvider>
+        <RootLayoutContent />
+      </ImageViewerProvider>
     </HeaderProvider>
   );
 }

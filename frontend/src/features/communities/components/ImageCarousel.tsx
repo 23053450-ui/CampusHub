@@ -5,7 +5,8 @@
  */
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { useImageViewer } from "@/lib/image-viewer-context";
 
 interface ImageCarouselProps {
   images: string[];
@@ -21,6 +22,7 @@ export function ImageCarousel({
   aspectClass = "max-h-[520px] min-h-[260px] sm:min-h-[360px]",
 }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { openImageViewer } = useImageViewer();
 
   if (!images || images.length === 0) return null;
 
@@ -44,6 +46,15 @@ export function ImageCarousel({
     setCurrentIndex(index);
   };
 
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openImageViewer({
+      images: validImages,
+      initialIndex: currentIndex,
+      title,
+    });
+  };
+
   return (
     <div
       className={`group relative w-full overflow-hidden rounded-xl border border-border/80 bg-black/95 flex items-center justify-center select-none ${aspectClass} ${className}`}
@@ -60,9 +71,21 @@ export function ImageCarousel({
       <img
         src={validImages[currentIndex]}
         alt={`${title} - view ${currentIndex + 1} of ${total}`}
-        className="max-h-full max-w-full object-contain transition-opacity duration-200"
+        onClick={handleImageClick}
+        className="max-h-full max-w-full object-contain cursor-zoom-in transition-opacity duration-200 hover:opacity-95"
         loading="lazy"
+        title="Click to expand full screen"
       />
+
+      {/* Expand Fullscreen Button */}
+      <button
+        type="button"
+        onClick={handleImageClick}
+        className="absolute top-3 left-3 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-black/90 transition-all border border-white/15 backdrop-blur-xs z-10"
+        title="Expand image"
+      >
+        <Maximize2 className="h-3.5 w-3.5" />
+      </button>
 
       {/* Counter Badge (Reddit-style "1/3") */}
       {total > 1 && (

@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { useImageViewer } from "@/lib/image-viewer-context";
 
 interface FormattedTextProps {
   content: string;
@@ -12,6 +13,7 @@ interface FormattedTextProps {
 }
 
 export function FormattedText({ content, className = "" }: FormattedTextProps) {
+  const { openImageViewer } = useImageViewer();
   if (!content) return null;
 
   // Split into lines or paragraphs
@@ -78,13 +80,24 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
       // Image: ![alt](url)
       const imgMatch = remainder.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
       if (imgMatch) {
+        const imgSrc = imgMatch[2];
+        const imgAlt = imgMatch[1] || "Attached image";
         tokens.push(
           <img
             key={keyIdx++}
-            src={imgMatch[2]}
-            alt={imgMatch[1] || "Attached image"}
-            className="my-2 max-h-60 max-w-sm rounded-lg border object-cover shadow-2xs"
+            src={imgSrc}
+            alt={imgAlt}
+            onClick={(e) => {
+              e.stopPropagation();
+              openImageViewer({
+                images: [imgSrc],
+                initialIndex: 0,
+                title: imgAlt,
+              });
+            }}
+            className="my-2 max-h-60 max-w-sm rounded-lg border object-cover shadow-2xs cursor-zoom-in hover:opacity-95 transition-opacity"
             loading="lazy"
+            title="Click to expand full screen"
           />
         );
         remainder = remainder.slice(imgMatch[0].length);
