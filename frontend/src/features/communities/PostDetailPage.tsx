@@ -358,8 +358,8 @@ export default function PostDetailPage() {
               </button>
             </div>
 
-            {/* Top-Level Add Comment Section */}
-            <div className="pt-2 space-y-2">
+            {/* Top-Level Add Comment Section (Single rounded rectangle box) */}
+            <div className="pt-2 space-y-1.5">
               <div className="text-xs font-medium text-muted-foreground">
                 Comment as <span className="text-foreground font-semibold">Hashpotato</span>
               </div>
@@ -368,70 +368,72 @@ export default function PostDetailPage() {
                 onChange={setCommentText}
                 placeholder="What are your thoughts?"
                 compact={false}
-                minHeight="min-h-[80px]"
-              />
-
-              {/* Attached Images Preview (up to 2) */}
-              {commentImages.length > 0 && (
-                <div className="flex gap-2 pt-1">
-                  {commentImages.map((img, idx) => (
-                    <div key={idx} className="relative group/thumb">
-                      <img
-                        src={img}
-                        alt="Comment attachment"
-                        className="h-16 w-16 object-cover rounded-md border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCommentImage(idx)}
-                        className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-90 hover:opacity-100 shadow-xs"
-                        title="Remove image"
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
+                minHeight="min-h-[85px]"
+                attachments={
+                  commentImages.length > 0 && (
+                    <div className="flex gap-2 px-3 pb-2 pt-0.5">
+                      {commentImages.map((img, idx) => (
+                        <div key={idx} className="relative group/thumb">
+                          <img
+                            src={img}
+                            alt="Comment attachment"
+                            className="h-16 w-16 object-cover rounded-md border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCommentImage(idx)}
+                            className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-90 hover:opacity-100 shadow-xs"
+                            title="Remove image"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Action Bar: Attach Image + Comment Submit */}
-              <div className="flex items-center justify-between pt-0.5">
-                <div className="flex items-center gap-2">
-                  {commentImages.length < 2 && (
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary/60 transition-colors">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple={false}
-                        onChange={handleCommentImageUpload}
-                        disabled={isProcessingCommentImages}
-                        className="hidden"
-                      />
-                      {isProcessingCommentImages ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                      ) : (
-                        <ImageIcon className="h-3.5 w-3.5" />
+                  )
+                }
+                footer={
+                  <>
+                    <div className="flex items-center gap-2">
+                      {commentImages.length < 2 && (
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple={false}
+                            onChange={handleCommentImageUpload}
+                            disabled={isProcessingCommentImages}
+                            className="hidden"
+                          />
+                          {isProcessingCommentImages ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                          ) : (
+                            <ImageIcon className="h-3.5 w-3.5" />
+                          )}
+                          <span className="text-[11px] font-medium">
+                            {commentImages.length > 0 ? `${commentImages.length}/2 Images` : "Attach image"}
+                          </span>
+                        </label>
                       )}
-                      <span>Attach image ({commentImages.length}/2)</span>
-                    </label>
-                  )}
-                </div>
+                    </div>
 
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleCreateTopLevelComment}
-                  disabled={!commentText.trim() || isSubmittingComment || isProcessingCommentImages}
-                  className="h-8 px-4 text-xs font-semibold gap-1.5"
-                >
-                  {isSubmittingComment ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  )}
-                  <span>Comment</span>
-                </Button>
-              </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleCreateTopLevelComment}
+                      disabled={!commentText.trim() || isSubmittingComment || isProcessingCommentImages}
+                      className="h-7 px-4 text-xs font-semibold rounded-full gap-1.5"
+                    >
+                      {isSubmittingComment ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      )}
+                      <span>Comment</span>
+                    </Button>
+                  </>
+                }
+              />
             </div>
 
             {/* 12-Level Nested Comments Thread */}

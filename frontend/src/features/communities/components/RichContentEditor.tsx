@@ -25,6 +25,8 @@ interface RichContentEditorProps {
   minHeight?: string;
   className?: string;
   autoFocus?: boolean;
+  footer?: React.ReactNode;
+  attachments?: React.ReactNode;
 }
 
 export function RichContentEditor({
@@ -35,6 +37,8 @@ export function RichContentEditor({
   minHeight = compact ? "min-h-[56px]" : "min-h-[140px]",
   className = "",
   autoFocus = false,
+  footer,
+  attachments,
 }: RichContentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -97,7 +101,7 @@ export function RichContentEditor({
 
   return (
     <div
-      className={`rounded-xl border border-input bg-card focus-within:ring-1 focus-within:ring-primary/40 focus-within:border-primary/50 transition-all flex flex-col ${className}`}
+      className={`rounded-xl border border-input bg-card focus-within:ring-1 focus-within:ring-primary/40 focus-within:border-primary/50 transition-all flex flex-col overflow-hidden ${className}`}
     >
       {/* Editor Textarea */}
       <textarea
@@ -111,9 +115,12 @@ export function RichContentEditor({
         className={`w-full resize-y bg-transparent p-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none leading-relaxed ${minHeight}`}
       />
 
+      {/* Optional attachments preview */}
+      {attachments}
+
       {/* Formatting Action Bar */}
       <div
-        className={`flex items-center flex-wrap gap-0.5 border-t bg-muted/25 px-2 py-1 text-muted-foreground select-none ${
+        className={`flex items-center flex-wrap gap-0.5 border-t bg-muted/20 px-2 py-1 text-muted-foreground select-none ${
           compact ? "py-0.5" : "py-1.5"
         }`}
       >
@@ -209,6 +216,13 @@ export function RichContentEditor({
           <LinkIcon className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
         </button>
       </div>
+
+      {/* Optional bottom footer (cancel/save buttons & controls) */}
+      {footer && (
+        <div className="border-t bg-muted/10 px-3 py-1.5 flex items-center justify-between">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }

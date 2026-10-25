@@ -346,95 +346,95 @@ export function CommentItem({
         </button>
       </div>
 
-      {/* Inline Reply Editor Box */}
+      {/* Inline Reply Editor Box (Single rounded rectangle box) */}
       {isReplying && !isMaxDepth && (
-        <div className="pl-7 mt-2 space-y-2">
-          <div className="rounded-xl border border-border/80 bg-muted/20 p-2.5 space-y-2">
-            <RichContentEditor
-              value={replyText}
-              onChange={setReplyText}
-              placeholder={`Reply to ${comment.authorHandle}...`}
-              compact={true}
-              autoFocus={true}
-            />
-
-            {/* Attached Images Preview (up to 2) */}
-            {replyImages.length > 0 && (
-              <div className="flex gap-2 pt-1">
-                {replyImages.map((img, idx) => (
-                  <div key={idx} className="relative group/thumb">
-                    <img
-                      src={img}
-                      alt="Reply attachment"
-                      className="h-16 w-16 object-cover rounded-md border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(idx)}
-                      className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-sm hover:scale-110 transition-transform"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-0.5">
-              {/* Attach Image button (limit 2) */}
-              <label
-                className={`inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer px-2 py-1 rounded hover:bg-muted transition-colors ${
-                  replyImages.length >= 2 || isProcessingImage ? "opacity-50 pointer-events-none" : ""
-                }`}
-              >
-                {isProcessingImage ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <ImageIcon className="h-3.5 w-3.5" />
-                )}
-                <span className="text-[11px]">
-                  {replyImages.length > 0 ? `${replyImages.length}/2 Images` : "Image"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={replyImages.length >= 2 || isProcessingImage}
-                  className="hidden"
-                />
-              </label>
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsReplying(false);
-                    setReplyText("");
-                    setReplyImages([]);
-                  }}
-                  className="h-7 text-xs px-2.5"
+        <div className="pl-7 mt-2">
+          <RichContentEditor
+            value={replyText}
+            onChange={setReplyText}
+            placeholder={`Reply to ${comment.authorHandle}...`}
+            compact={true}
+            autoFocus={true}
+            attachments={
+              replyImages.length > 0 && (
+                <div className="flex gap-2 px-3 pb-2 pt-0.5">
+                  {replyImages.map((img, idx) => (
+                    <div key={idx} className="relative group/thumb">
+                      <img
+                        src={img}
+                        alt="Reply attachment"
+                        className="h-14 w-14 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-sm hover:scale-110 transition-transform"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+            footer={
+              <>
+                {/* Attach Image button (limit 2) */}
+                <label
+                  className={`inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer px-2 py-1 rounded hover:bg-muted/80 transition-colors ${
+                    replyImages.length >= 2 || isProcessingImage ? "opacity-50 pointer-events-none" : ""
+                  }`}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSubmitReply}
-                  disabled={!replyText.trim() || isSubmitting}
-                  className="h-7 text-xs px-3 gap-1"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                  {isProcessingImage ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
                   ) : (
-                    <Send className="h-3 w-3" />
+                    <ImageIcon className="h-3.5 w-3.5" />
                   )}
-                  <span>Reply</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+                  <span className="text-[11px] font-medium">
+                    {replyImages.length > 0 ? `${replyImages.length}/2 Images` : "Image"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={replyImages.length >= 2 || isProcessingImage}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Cancel & Save/Reply Buttons */}
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsReplying(false);
+                      setReplyText("");
+                      setReplyImages([]);
+                    }}
+                    className="h-7 text-xs px-3 rounded-full hover:bg-muted font-medium"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSubmitReply}
+                    disabled={!replyText.trim() || isSubmitting || isProcessingImage}
+                    className="h-7 text-xs px-3.5 rounded-full gap-1 font-semibold"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Send className="h-3 w-3" />
+                    )}
+                    <span>Reply</span>
+                  </Button>
+                </div>
+              </>
+            }
+          />
         </div>
       )}
 
