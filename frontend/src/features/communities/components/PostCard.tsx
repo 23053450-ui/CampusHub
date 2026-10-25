@@ -138,17 +138,17 @@ export function PostCard({ post, onVote, highlightQuery }: PostCardProps) {
         </p>
       )}
 
-      {/* Post Footer Actions: Upvote/Downvote & Comments */}
-      <div className="flex items-center gap-3 pt-1">
-        {/* Voting capsule (same color for upvote and downvote) */}
+      {/* Post Footer Actions: Upvote/Downvote & Comments (Geometrically similar capsules) */}
+      <div className="flex items-center gap-2.5 pt-1">
+        {/* Voting capsule */}
         <div
-          className="flex items-center rounded-lg border bg-secondary/50 px-1 py-0.5"
+          className="inline-flex h-8 items-center rounded-lg border border-border/80 bg-secondary/40 px-1 text-xs select-none"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
             onClick={handleUpvote}
-            className={`p-1 rounded-sm transition-colors hover:bg-muted ${
+            className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-background/80 ${
               post.currentUserVote === 1
                 ? "text-primary font-bold"
                 : "text-muted-foreground hover:text-foreground"
@@ -158,7 +158,7 @@ export function PostCard({ post, onVote, highlightQuery }: PostCardProps) {
             <ArrowBigUp className={`h-4 w-4 ${post.currentUserVote === 1 ? "fill-primary" : ""}`} />
           </button>
           <span
-            className={`px-1 text-xs font-semibold ${
+            className={`min-w-[1.25rem] px-1 text-center text-xs font-semibold ${
               post.currentUserVote !== null
                 ? "text-primary"
                 : "text-foreground"
@@ -170,7 +170,7 @@ export function PostCard({ post, onVote, highlightQuery }: PostCardProps) {
           <button
             type="button"
             onClick={handleDownvote}
-            className={`p-1 rounded-sm transition-colors hover:bg-muted ${
+            className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-background/80 ${
               post.currentUserVote === -1
                 ? "text-primary font-bold"
                 : "text-muted-foreground hover:text-foreground"
@@ -181,14 +181,14 @@ export function PostCard({ post, onVote, highlightQuery }: PostCardProps) {
           </button>
         </div>
 
-        {/* Reply Count Capsule (clicking opens post) */}
+        {/* Reply Count Capsule (matching exact geometry, height, border, and background) */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleOpenPost();
           }}
-          className="flex items-center gap-1.5 rounded-lg border bg-secondary/30 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/80 bg-secondary/40 px-3 text-xs font-medium text-muted-foreground hover:bg-secondary/70 hover:text-foreground transition-colors cursor-pointer select-none"
         >
           <MessageSquare className="h-3.5 w-3.5" />
           <span>{post.replyCount} comments</span>

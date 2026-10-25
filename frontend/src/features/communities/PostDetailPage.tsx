@@ -309,14 +309,14 @@ export default function PostDetailPage() {
               </div>
             )}
 
-            {/* Action Bar (Upvote/Downvote pills, comments count, share) */}
-            <div className="flex items-center gap-2 pt-2 border-b pb-3">
-              {/* Same-color Vote Capsule */}
-              <div className="flex items-center rounded-lg border bg-secondary/50 px-1.5 py-0.5">
+            {/* Action Bar (Upvote/Downvote pills, comments count, share - geometrically aligned) */}
+            <div className="flex items-center gap-2.5 pt-2 border-b pb-3 select-none">
+              {/* Vote Capsule */}
+              <div className="inline-flex h-8 items-center rounded-lg border border-border/80 bg-secondary/40 px-1 text-xs">
                 <button
                   type="button"
                   onClick={() => handleVote(1)}
-                  className={`p-1 rounded-sm transition-colors hover:bg-muted ${
+                  className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-background/80 ${
                     currentUserVote === 1
                       ? "text-primary font-bold"
                       : "text-muted-foreground hover:text-foreground"
@@ -329,7 +329,7 @@ export default function PostDetailPage() {
                 </button>
 
                 <span
-                  className={`px-1.5 text-xs font-semibold ${
+                  className={`min-w-[1.25rem] px-1 text-center text-xs font-semibold ${
                     currentUserVote !== null ? "text-primary" : "text-foreground"
                   }`}
                 >
@@ -339,7 +339,7 @@ export default function PostDetailPage() {
                 <button
                   type="button"
                   onClick={() => handleVote(-1)}
-                  className={`p-1 rounded-sm transition-colors hover:bg-muted ${
+                  className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-background/80 ${
                     currentUserVote === -1
                       ? "text-primary font-bold"
                       : "text-muted-foreground hover:text-foreground"
@@ -353,9 +353,9 @@ export default function PostDetailPage() {
               </div>
 
               {/* Comment Counter Capsule */}
-              <div className="flex items-center gap-1.5 rounded-lg border bg-secondary/30 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              <div className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/80 bg-secondary/40 px-3 text-xs font-medium text-muted-foreground">
                 <MessageSquare className="h-3.5 w-3.5" />
-                <span>{post.replyCount}</span>
+                <span>{post.replyCount} comments</span>
               </div>
 
               {/* Share Button */}
@@ -364,7 +364,7 @@ export default function PostDetailPage() {
                 onClick={() => {
                   navigator.clipboard?.writeText(window.location.href);
                 }}
-                className="flex items-center gap-1.5 rounded-lg border bg-secondary/30 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/80 bg-secondary/40 px-3 text-xs font-medium text-muted-foreground hover:bg-secondary/70 hover:text-foreground transition-colors cursor-pointer"
                 title="Copy link"
               >
                 <Share2 className="h-3.5 w-3.5" />
