@@ -538,7 +538,13 @@ export const mockCommunitiesService: CommunitiesService = {
     if (sort === "top") {
       filtered = [...filtered].sort((a, b) => b.upvotes - b.downvotes - (a.upvotes - a.downvotes));
     } else if (sort === "hot") {
-      filtered = [...filtered].sort((a, b) => b.replyCount + b.upvotes - (a.replyCount + a.upvotes));
+      const calcHotScore = (p: Post) => {
+        const net = (p.upvotes - p.downvotes) + (p.replyCount * 2);
+        const order = net > 0 ? Math.log10(net) : net < 0 ? -Math.log10(Math.abs(net)) : 0;
+        const seconds = (new Date(p.createdAt).getTime() / 1000) - 1700000000;
+        return order + (seconds / 45000);
+      };
+      filtered = [...filtered].sort((a, b) => calcHotScore(b) - calcHotScore(a));
     } else {
       filtered = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }

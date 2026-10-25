@@ -32,6 +32,7 @@ export interface Post {
   upvotes: number;
   downvotes: number;
   replyCount: number;
+  hotScore?: number;
   createdAt: string;
   currentUserVote?: 1 | -1 | null;
 }

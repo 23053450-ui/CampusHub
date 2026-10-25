@@ -61,6 +61,8 @@ export const realCommunitiesService: CommunitiesService = {
 
       if (sort === "top") {
         query = query.order("upvotes", { ascending: false });
+      } else if (sort === "hot") {
+        query = query.order("hot_score", { ascending: false });
       } else {
         query = query.order("created_at", { ascending: false });
       }
@@ -104,6 +106,7 @@ export const realCommunitiesService: CommunitiesService = {
         upvotes: row.upvotes ?? 0,
         downvotes: row.downvotes ?? 0,
         replyCount: row.reply_count ?? 0,
+        hotScore: row.hot_score,
         createdAt: row.created_at,
         currentUserVote: userVotes[row.id] ?? null,
       }));
@@ -160,6 +163,7 @@ export const realCommunitiesService: CommunitiesService = {
         upvotes: row.upvotes ?? 0,
         downvotes: row.downvotes ?? 0,
         replyCount: row.reply_count ?? 0,
+        hotScore: row.hot_score,
         createdAt: row.created_at,
         currentUserVote,
       };
@@ -219,6 +223,7 @@ export const realCommunitiesService: CommunitiesService = {
         upvotes: row.upvotes ?? 0,
         downvotes: row.downvotes ?? 0,
         replyCount: row.reply_count ?? 0,
+        hotScore: row.hot_score,
         createdAt: row.created_at,
         currentUserVote: null,
       }));
