@@ -26,7 +26,8 @@ class ChatRequest(BaseModel):
     subject_id: str = Field(min_length=1, max_length=50)
     messages: list[Message] = Field(min_length=1, max_length=40)
     documents: list[ContextDocument] = Field(default_factory=list, max_length=5)
-
+    subject_name: str | None = Field(default=None, max_length=100)
+    
     @model_validator(mode="after")
     def check_total_size(self):
         total = sum(len(d.text) for d in self.documents)

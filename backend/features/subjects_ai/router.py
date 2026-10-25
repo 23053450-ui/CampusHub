@@ -13,14 +13,24 @@ router = APIRouter(
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
-    reply = generate_reply(req.subject_id, req.messages, req.documents)
+    reply = generate_reply(
+        req.subject_id,
+        req.messages,
+        req.documents,
+        subject_name=req.subject_name,
+    )
     return ChatResponse(reply=reply)
 
 
 @router.post("/chat/stream")
 def chat_stream(req: ChatRequest):
     return StreamingResponse(
-        stream_reply(req.subject_id, req.messages, req.documents),
+        stream_reply(
+            req.subject_id,
+            req.messages,
+            req.documents,
+            subject_name=req.subject_name,
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

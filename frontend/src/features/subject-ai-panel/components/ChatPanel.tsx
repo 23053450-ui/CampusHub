@@ -4,10 +4,10 @@ import { useChat } from "../hooks/useChat";
 import { ChatInput } from "./ChatInput";
 import { ChatMessageBubble } from "./ChatMessageBubble";
 
-export function ChatPanel({ subjectId }: { subjectId: string }) {
-  const { messages, isStreaming, send, stop, clear } = useChat(subjectId);
+export function ChatPanel({subjectId, subjectName}: { subjectId: string; subjectName?: string; }) {
+  const { messages, isStreaming, send, stop, clear } = useChat(subjectId, subjectName);
   const bottomRef = useRef<HTMLDivElement>(null);
-
+  
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);

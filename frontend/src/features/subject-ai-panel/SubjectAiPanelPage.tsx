@@ -7,7 +7,7 @@
 import { useParams } from "react-router-dom";
 import { ChatPanel } from "./components/ChatPanel";
 
-export default function SubjectAiPanelPage() {
+export default function SubjectAiPanelPage({ subjectName }: { subjectName?: string }) {
   const { subjectId } = useParams<{ subjectId: string }>();
 
   if (!subjectId) {
@@ -18,6 +18,5 @@ export default function SubjectAiPanelPage() {
     );
   }
 
-  // key={subjectId} resets the conversation when you switch subjects
-  return <ChatPanel key={subjectId} subjectId={subjectId} />;
+  return <ChatPanel key={subjectId} subjectId={subjectId} subjectName={subjectName} />;
 }

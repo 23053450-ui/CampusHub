@@ -55,6 +55,7 @@ export async function* streamChat(params: {
   messages: ChatMessage[];
   documents?: ChatDocument[];
   signal?: AbortSignal;
+  subjectName?: string,
 }): AsyncGenerator<StreamEvent> {
   const token = await getAuthToken();
 
@@ -66,6 +67,7 @@ export async function* streamChat(params: {
     },
     body: JSON.stringify({
       subject_id: params.subjectId,
+      subject_name: params.subjectName,
       messages: params.messages,
       documents: params.documents ?? [],
     }),

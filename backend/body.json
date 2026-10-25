@@ -1,12 +1,7 @@
 {
-  "subject_id": "cs301",
-  "documents": [
-    {
-      "title": "Lecture 2 notes",
-      "text": "In our course, Prof. Rao defines the 'Triple-K rule': a table is Triple-K compliant if it has a primary key, a foreign key, and a unique key. This is exam-relevant."
-    }
-  ],
+  "subject_id": "cs303",
+  "subject_name": "Operating Systems",
   "messages": [
-    { "role": "user", "content": "What is the Triple-K rule?" }
+    { "role": "user", "content": "What is a deadlock?" }
   ]
 }

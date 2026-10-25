@@ -41,7 +41,7 @@ function friendlyError(e: unknown): string {
   return "Couldn't reach the server. Check your connection and try again.";
 }
 
-export function useChat(subjectId: string) {
+export function useChat(subjectId: string, subjectName?: string) {
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -74,6 +74,7 @@ export function useChat(subjectId: string) {
       try {
         for await (const ev of streamChat({
           subjectId,
+          subjectName,
           messages: history,
           signal: controller.signal,
         })) {
@@ -95,7 +96,7 @@ export function useChat(subjectId: string) {
         abortRef.current = null;
       }
     },
-    [messages, isStreaming, subjectId],
+    [messages, isStreaming, subjectId,subjectName],
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
