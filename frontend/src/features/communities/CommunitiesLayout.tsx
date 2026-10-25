@@ -11,6 +11,7 @@ import { HeaderActions } from "@/lib/header-context";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SubjectForumsSidebar } from "./components/SubjectForumsSidebar";
+import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { communitiesService } from "./services";
 import type { SubjectForum } from "./services/types";
 
@@ -24,7 +25,7 @@ export default function CommunitiesLayout() {
   const { subjectId } = useParams<{ subjectId?: string }>();
   const navigate = useNavigate();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = usePersistentToggle("campushub:sidebar:communities", true);
   const [forums, setForums] = useState<SubjectForum[]>([]);
   const [activeForum, setActiveForum] = useState<SubjectForum | null>(null);
   const [headerSearch, setHeaderSearch] = useState("");

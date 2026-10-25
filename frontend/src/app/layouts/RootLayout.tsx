@@ -20,6 +20,7 @@ import type { Subject } from "@/shared/user";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
 import { ImageViewerProvider } from "@/lib/image-viewer-context";
 import { useResizable } from "@/lib/use-resizable";
+import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -54,9 +55,9 @@ function getPageTitle(pathname: string): string {
 }
 
 function RootLayoutContent() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isStudentToolsOpen, setIsStudentToolsOpen] = useState(true);
-  const [isSubjectsOpen, setIsSubjectsOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = usePersistentToggle("campushub:sidebar:main", true);
+  const [isStudentToolsOpen, setIsStudentToolsOpen] = usePersistentToggle("campushub:sidebar:student-tools", true);
+  const [isSubjectsOpen, setIsSubjectsOpen] = usePersistentToggle("campushub:sidebar:subjects", true);
   const location = useLocation();
   const { actions, title: customTitle } = useHeader();
 

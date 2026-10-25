@@ -10,11 +10,12 @@ import { PanelRight, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderActions } from "@/lib/header-context";
 import { useResizable } from "@/lib/use-resizable";
+import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import SubjectAiPanelPage from "@/features/subject-ai-panel/SubjectAiPanelPage";
 
 export default function SubjectWorkspaceLayout() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = usePersistentToggle("campushub:sidebar:ai-panel", true);
 
   const {
     width: aiPanelWidth,
