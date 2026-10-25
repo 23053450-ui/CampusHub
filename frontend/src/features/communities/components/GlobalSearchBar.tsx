@@ -130,7 +130,7 @@ export function GlobalSearchBar() {
         <Input
           ref={inputRef}
           type="search"
-          placeholder="Search across all subjects, notes, and communities... ⌘K"
+          placeholder="Search across all subjects, notes, and communities..."
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -143,10 +143,10 @@ export function GlobalSearchBar() {
               inputRef.current?.blur();
             }
           }}
-          className="h-9 w-full pl-9 pr-14 text-xs sm:text-sm bg-muted/40 hover:bg-muted/60 focus:bg-background border-muted-foreground/20 focus:border-primary shadow-2xs rounded-lg transition-all"
+          className="h-9 w-full pl-9 pr-9 text-xs sm:text-sm bg-muted/40 hover:bg-muted/60 focus:bg-background border-muted-foreground/20 focus:border-primary shadow-2xs rounded-lg transition-all"
         />
 
-        {/* Right Action Icons: Spinner / Clear Button / ⌘K Badge */}
+        {/* Right Action Icons: Spinner / Clear Button */}
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-auto">
           {isLoading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
@@ -163,11 +163,7 @@ export function GlobalSearchBar() {
             >
               <X className="h-3.5 w-3.5" />
             </button>
-          ) : (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/80 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground shadow-2xs select-none">
-              ⌘K
-            </kbd>
-          )}
+          ) : null}
         </div>
       </div>
 
