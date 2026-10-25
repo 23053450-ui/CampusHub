@@ -190,10 +190,10 @@ export function CommentItem({
   // If collapsed: replace avatar with Reddit [⊕] icon at x = 0, followed by author & time & (X more)
   if (isCollapsed) {
     return (
-      <div className={`relative ${depth === 0 ? "mt-3 first:mt-0" : "mt-2"}`}>
+      <div className={`relative ${depth === 0 ? "mt-5 first:mt-0" : "mt-3.5"}`}>
         <div
           onClick={() => setIsCollapsed(false)}
-          className="flex items-center gap-2 text-xs text-muted-foreground select-none cursor-pointer group/collapsed py-0.5 hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-xs text-muted-foreground select-none cursor-pointer group/collapsed py-1 hover:text-foreground transition-colors"
           title="Expand comment thread"
         >
           {/* Reddit [⊕] icon positioned in place of the 24px avatar */}
@@ -217,7 +217,7 @@ export function CommentItem({
   }
 
   return (
-    <div className={`relative ${depth === 0 ? "mt-3 first:mt-0" : "mt-2.5"}`}>
+    <div className={`relative ${depth === 0 ? "mt-5 first:mt-0" : "mt-3.5"}`}>
       {/* Header Row: Avatar + Handle + Time */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground select-none relative z-10">
         <Avatar className="h-6 w-6 shrink-0 relative z-10 bg-background">
@@ -237,10 +237,10 @@ export function CommentItem({
       </div>
 
       {/* Comment Body & Optional Attachments (up to 2) */}
-      <div className="pl-7 pt-1 text-xs sm:text-sm text-foreground/90 leading-relaxed">
+      <div className="pl-7 pt-1.5 text-xs sm:text-sm text-foreground/90 leading-relaxed">
         <FormattedText content={comment.body} />
         {comment.images && comment.images.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2.5 flex flex-wrap gap-2">
             {comment.images.slice(0, 2).map((imgUrl, idx) => (
               <img
                 key={idx}
@@ -264,7 +264,7 @@ export function CommentItem({
       </div>
 
       {/* Action Row matching Reddit: [⊖] at x = 0 aligned with thread line, followed by [↑ vote ↓] [Reply] [Share] */}
-      <div className="mt-1 flex items-center gap-2 select-none">
+      <div className="mt-2 flex items-center gap-2 select-none">
         {/* Reddit-style [⊖] button positioned in the 24px avatar column */}
         <button
           type="button"
@@ -275,12 +275,12 @@ export function CommentItem({
           <RedditMinusIcon className="h-4 w-4" />
         </button>
 
-        {/* Voting Capsule */}
-        <div className="flex items-center rounded-md border bg-secondary/30 px-1 py-0.5">
+        {/* Voting Buttons (clean, borderless, close together) */}
+        <div className="flex items-center gap-0.5">
           <button
             type="button"
             onClick={handleUpvote}
-            className={`p-0.5 rounded transition-colors hover:bg-muted ${
+            className={`p-1 rounded-full transition-colors hover:bg-muted ${
               currentUserVote === 1
                 ? "text-primary font-bold"
                 : "text-muted-foreground hover:text-foreground"
@@ -288,12 +288,12 @@ export function CommentItem({
             title="Upvote"
           >
             <ArrowBigUp
-              className={`h-3.5 w-3.5 ${currentUserVote === 1 ? "fill-primary" : ""}`}
+              className={`h-4 w-4 ${currentUserVote === 1 ? "fill-primary" : ""}`}
             />
           </button>
 
           <span
-            className={`px-1 text-[11px] font-semibold ${
+            className={`min-w-[14px] text-center text-xs font-semibold select-none ${
               currentUserVote !== null ? "text-primary" : "text-foreground"
             }`}
           >
@@ -303,7 +303,7 @@ export function CommentItem({
           <button
             type="button"
             onClick={handleDownvote}
-            className={`p-0.5 rounded transition-colors hover:bg-muted ${
+            className={`p-1 rounded-full transition-colors hover:bg-muted ${
               currentUserVote === -1
                 ? "text-primary font-bold"
                 : "text-muted-foreground hover:text-foreground"
@@ -311,7 +311,7 @@ export function CommentItem({
             title="Downvote"
           >
             <ArrowBigDown
-              className={`h-3.5 w-3.5 ${currentUserVote === -1 ? "fill-primary" : ""}`}
+              className={`h-4 w-4 ${currentUserVote === -1 ? "fill-primary" : ""}`}
             />
           </button>
         </div>
@@ -440,11 +440,11 @@ export function CommentItem({
 
       {/* Reddit-style Recursive Nested Children with clean vertical thread line */}
       {hasChildren && (
-        <div className="relative pl-6 space-y-1">
+        <div className="relative pl-6 space-y-3.5 mt-2">
           {/* Thread Line: Runs down the left margin (at x = 11px, directly under the parent's [⊖] button) */}
           <div
             onClick={() => setIsCollapsed(true)}
-            className="absolute top-1 bottom-2 left-[11px] w-[2px] bg-border/60 hover:bg-primary transition-colors cursor-pointer rounded-full z-0"
+            className="absolute top-1.5 bottom-2.5 left-[11px] w-[2px] bg-border/60 hover:bg-primary transition-colors cursor-pointer rounded-full z-0"
             title="Click to collapse thread"
           />
 
