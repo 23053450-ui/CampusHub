@@ -1,10 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
+from core.rate_limit import rate_limit
 from .schemas import ChatRequest, ChatResponse
 from .service import generate_reply, stream_reply
 
-router = APIRouter(tags=["subjects-ai"])
+router = APIRouter(
+    tags=["subjects-ai"],
+    dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))],
+)
 
 
 @router.post("/chat", response_model=ChatResponse)
