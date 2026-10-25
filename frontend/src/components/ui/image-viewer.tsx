@@ -183,9 +183,9 @@ export function ImageViewerModal({
       {/* Top Header Bar */}
       <header className="relative z-20 flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10 text-white backdrop-blur-sm">
         {/* Title or Counter */}
-        <div className="flex items-center gap-3 max-w-[50%]">
+        <div className="flex items-center gap-3 min-w-0 max-w-[50%]">
           {total > 1 && (
-            <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold font-mono tracking-wider border border-white/15">
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold font-mono border border-white/15">
               {currentIndex + 1} / {total}
             </span>
           )}
