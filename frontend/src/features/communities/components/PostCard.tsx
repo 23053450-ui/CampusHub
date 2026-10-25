@@ -14,9 +14,44 @@ import type { Post } from "../services/types";
 interface PostCardProps {
   post: Post;
   onVote: (postId: string, vote: 1 | -1 | null) => void;
+  highlightQuery?: string;
 }
 
-export function PostCard({ post, onVote }: PostCardProps) {
+function HighlightedTitle({ title, query }: { title: string; query?: string }) {
+  if (!query || !query.trim()) {
+    return <>{title}</>;
+  }
+
+  const terms = query
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+  if (terms.length === 0) return <>{title}</>;
+
+  const regex = new RegExp(`(${terms.join("|")})`, "gi");
+  const parts = title.split(regex);
+
+  return (
+    <>
+      {parts.map((part, index) =>
+        regex.test(part) ? (
+          <mark
+            key={index}
+            className="bg-primary/20 text-foreground font-semibold px-0.5 rounded-xs"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
+export function PostCard({ post, onVote, highlightQuery }: PostCardProps) {
   const navigate = useNavigate();
 
   const handleOpenPost = () => {
@@ -81,7 +116,7 @@ export function PostCard({ post, onVote }: PostCardProps) {
       {/* Post Title */}
       <div>
         <h3 className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
-          {post.title}
+          <HighlightedTitle title={post.title} query={highlightQuery} />
         </h3>
       </div>
 

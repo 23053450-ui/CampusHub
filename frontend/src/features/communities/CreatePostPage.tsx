@@ -178,7 +178,7 @@ export default function CreatePostPage() {
               variant="ghost"
               size="icon"
               onClick={() => navigate(backUrl)}
-              className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+              className="-ml-2 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
               title="Cancel and return"
             >
               <ArrowLeft className="h-4 w-4" />

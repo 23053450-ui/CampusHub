@@ -240,12 +240,12 @@ export default function PostDetailPage() {
             {/* Header Row: Back Button + Community Avatar & Details (stacked 2-line) + Actions */}
             <div className="flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5 min-w-0">
-                {/* Circular back button - flush left */}
+                {/* Circular back button - shifted slightly left (-ml-2) so the arrow icon aligns with the title text */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(backUrl)}
-                  className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className="-ml-2 h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                   title="Back to community"
                 >
                   <ArrowLeft className="h-4 w-4" />

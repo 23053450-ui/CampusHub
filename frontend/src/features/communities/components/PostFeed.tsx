@@ -6,7 +6,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MessageSquareDashed } from "lucide-react";
+import { Plus, MessageSquareDashed, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,6 +27,8 @@ interface PostFeedProps {
   onSortChange: (sort: "new" | "top" | "hot") => void;
   onVote: (postId: string, vote: 1 | -1 | null) => void;
   onRefresh?: () => void;
+  searchQuery?: string;
+  onClearSearch?: () => void;
 }
 
 export function PostFeed({
@@ -37,6 +39,8 @@ export function PostFeed({
   sortBy,
   onSortChange,
   onVote,
+  searchQuery,
+  onClearSearch,
 }: PostFeedProps) {
   const navigate = useNavigate();
 
@@ -56,8 +60,32 @@ export function PostFeed({
 
   return (
     <div className="space-y-4">
+      {/* Active Search Filter Status */}
+      {searchQuery && (
+        <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3.5 py-2 text-xs">
+          <div className="flex items-center gap-1.5 text-muted-foreground truncate mr-2">
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <span className="shrink-0">Searching titles for:</span>
+            <span className="font-semibold text-foreground truncate">"{searchQuery}"</span>
+            <span className="shrink-0 text-muted-foreground">
+              ({posts.length} {posts.length === 1 ? "match" : "matches"})
+            </span>
+          </div>
+          {onClearSearch && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearSearch}
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+            >
+              Clear filter
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Action Bar matching wireframe: [New v] on left, [+ New Post] on right */}
-      <div className="flex items-center justify-between gap-3 pt-2">
+      <div className="flex items-center justify-between gap-3 pt-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium">
@@ -89,21 +117,43 @@ export function PostFeed({
           <Skeleton className="h-28 w-full rounded-xl" />
         </div>
       ) : posts.length === 0 ? (
-        <div className="rounded-xl border border-dashed p-10 text-center space-y-2">
-          <MessageSquareDashed className="mx-auto h-8 w-8 text-muted-foreground" />
-          <h4 className="text-sm font-semibold text-foreground">No discussions yet</h4>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Be the first student to ask a question or share a tip in the {subjectName} community!
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleOpenCreatePost}
-            className="mt-2 text-xs"
-          >
-            Start a discussion
-          </Button>
-        </div>
+        searchQuery ? (
+          <div className="rounded-xl border border-dashed p-10 text-center space-y-2">
+            <Search className="mx-auto h-8 w-8 text-muted-foreground/60" />
+            <h4 className="text-sm font-semibold text-foreground">
+              No post titles matching "{searchQuery}"
+            </h4>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              We couldn't find any discussion posts in {subjectName} with titles containing this search term.
+            </p>
+            {onClearSearch && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onClearSearch}
+                className="mt-2 text-xs cursor-pointer"
+              >
+                Clear search filter
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed p-10 text-center space-y-2">
+            <MessageSquareDashed className="mx-auto h-8 w-8 text-muted-foreground" />
+            <h4 className="text-sm font-semibold text-foreground">No discussions yet</h4>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Be the first student to ask a question or share a tip in the {subjectName} community!
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleOpenCreatePost}
+              className="mt-2 text-xs"
+            >
+              Start a discussion
+            </Button>
+          </div>
+        )
       ) : (
         <div className="space-y-3">
           {posts.map((post) => (
@@ -111,6 +161,7 @@ export function PostFeed({
               key={post.id}
               post={post}
               onVote={onVote}
+              highlightQuery={searchQuery}
             />
           ))}
         </div>

@@ -4,7 +4,7 @@
  * @owner Communities Team
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useOutletContext } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CommunityHeader } from "./components/CommunityHeader";
@@ -24,6 +24,7 @@ export default function CommunitiesPage() {
   const context = useOutletContext<CommunitiesContextType | undefined>();
 
   const activeForum = context?.activeForum || null;
+  const searchQuery = context?.searchQuery || "";
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
@@ -36,6 +37,23 @@ export default function CommunitiesPage() {
 
   // Active Main Tab ("posts" | "resources")
   const [activeTab, setActiveTab] = useState<"posts" | "resources">("posts");
+
+  // Automatically switch to Posts tab when a search query is typed
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setActiveTab("posts");
+    }
+  }, [searchQuery]);
+
+  // Filter posts by title using active search query
+  const filteredPosts = useMemo(() => {
+    if (!searchQuery.trim()) return posts;
+    const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    return posts.filter((post) => {
+      const titleLower = post.title.toLowerCase();
+      return terms.every((term) => titleLower.includes(term));
+    });
+  }, [posts, searchQuery]);
 
   // 1. Load Posts for active forum
   const loadPosts = () => {
@@ -164,7 +182,7 @@ export default function CommunitiesPage() {
             {/* Tab 1: Posts (Discussions) */}
             <TabsContent value="posts" className="mt-4 focus-visible:outline-none">
               <PostFeed
-                posts={posts}
+                posts={filteredPosts}
                 isLoading={isLoadingPosts}
                 subjectName={activeForum.name}
                 subjectId={activeForum.id}
@@ -172,6 +190,8 @@ export default function CommunitiesPage() {
                 onSortChange={setPostSort}
                 onVote={handleVotePost}
                 onRefresh={loadPosts}
+                searchQuery={searchQuery}
+                onClearSearch={() => context?.setSearchQuery("")}
               />
             </TabsContent>
 
