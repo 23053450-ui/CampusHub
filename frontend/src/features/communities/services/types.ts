@@ -67,7 +67,7 @@ export interface ResourceNote {
 
 export interface CommunitiesService {
   getSubjectForums(): Promise<Result<SubjectForum[]>>;
-  getPosts(subjectId: string, sort?: "new" | "top" | "hot"): Promise<Result<Post[]>>;
+  getPosts(subjectId: string, sort?: "new" | "top" | "hot", search?: string): Promise<Result<Post[]>>;
   getPost(postId: string): Promise<Result<Post>>;
   createPost(data: {
     subjectId: string;

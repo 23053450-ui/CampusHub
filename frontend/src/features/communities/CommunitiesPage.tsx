@@ -4,13 +4,14 @@
  * @owner Communities Team
  */
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CommunityHeader } from "./components/CommunityHeader";
 import { PostFeed } from "./components/PostFeed";
 import { ResourceArchive } from "./components/ResourceArchive";
 import { communitiesService } from "./services";
+import { useDebounce } from "@/lib/use-debounce";
 import type { CommunitiesContextType } from "./CommunitiesLayout";
 import type {
   Post,
@@ -25,6 +26,7 @@ export default function CommunitiesPage() {
 
   const activeForum = context?.activeForum || null;
   const searchQuery = context?.searchQuery || "";
+  const debouncedSearch = useDebounce(searchQuery, 350);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
@@ -45,21 +47,11 @@ export default function CommunitiesPage() {
     }
   }, [searchQuery]);
 
-  // Filter posts by title using active search query
-  const filteredPosts = useMemo(() => {
-    if (!searchQuery.trim()) return posts;
-    const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    return posts.filter((post) => {
-      const titleLower = post.title.toLowerCase();
-      return terms.every((term) => titleLower.includes(term));
-    });
-  }, [posts, searchQuery]);
-
-  // 1. Load Posts for active forum
+  // 1. Load Posts for active forum (debounced so rapid keystrokes don't flood Supabase)
   const loadPosts = () => {
     if (!activeForum) return;
     setIsLoadingPosts(true);
-    communitiesService.getPosts(activeForum.id, postSort).then((res) => {
+    communitiesService.getPosts(activeForum.id, postSort, debouncedSearch).then((res) => {
       if (res.data) {
         setPosts(res.data);
       }
@@ -69,7 +61,7 @@ export default function CommunitiesPage() {
 
   useEffect(() => {
     loadPosts();
-  }, [activeForum?.id, postSort]);
+  }, [activeForum?.id, postSort, debouncedSearch]);
 
   // 2. Load Resources for active forum
   const loadResources = () => {
@@ -182,7 +174,7 @@ export default function CommunitiesPage() {
             {/* Tab 1: Posts (Discussions) */}
             <TabsContent value="posts" className="mt-4 focus-visible:outline-none">
               <PostFeed
-                posts={filteredPosts}
+                posts={posts}
                 isLoading={isLoadingPosts}
                 subjectName={activeForum.name}
                 subjectId={activeForum.id}

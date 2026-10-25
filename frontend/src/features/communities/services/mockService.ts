@@ -522,9 +522,17 @@ export const mockCommunitiesService: CommunitiesService = {
     return { data: [...subjectForums], error: null };
   },
 
-  async getPosts(subjectId: string, sort: "new" | "top" | "hot" = "new"): Promise<Result<Post[]>> {
+  async getPosts(subjectId: string, sort: "new" | "top" | "hot" = "new", search?: string): Promise<Result<Post[]>> {
     await new Promise((resolve) => setTimeout(resolve, 200));
     let filtered = posts.filter((p) => p.subjectId === subjectId);
+
+    if (search && search.trim()) {
+      const terms = search.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      filtered = filtered.filter((post) => {
+        const titleLower = post.title.toLowerCase();
+        return terms.every((term) => titleLower.includes(term));
+      });
+    }
 
     if (sort === "top") {
       filtered = [...filtered].sort((a, b) => b.upvotes - b.downvotes - (a.upvotes - a.downvotes));

@@ -47,12 +47,16 @@ export const realCommunitiesService: CommunitiesService = {
     }
   },
 
-  async getPosts(subjectId: string, sort: "new" | "top" | "hot" = "new"): Promise<Result<Post[]>> {
+  async getPosts(subjectId: string, sort: "new" | "top" | "hot" = "new", search?: string): Promise<Result<Post[]>> {
     try {
       let query = supabase
         .from("posts")
         .select("*, profiles!posts_author_id_fkey(handle, avatar_url)")
         .eq("subject_id", subjectId);
+
+      if (search && search.trim()) {
+        query = query.ilike("title", `%${search.trim()}%`);
+      }
 
       if (sort === "top") {
         query = query.order("upvotes", { ascending: false });
