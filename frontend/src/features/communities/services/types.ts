@@ -65,10 +65,16 @@ export interface ResourceNote {
   createdAt: string;
 }
 
+export interface GlobalSearchResult {
+  forums: SubjectForum[];
+  posts: (Post & { forumName?: string })[];
+}
+
 export interface CommunitiesService {
   getSubjectForums(): Promise<Result<SubjectForum[]>>;
   getPosts(subjectId: string, sort?: "new" | "top" | "hot", search?: string): Promise<Result<Post[]>>;
   getPost(postId: string): Promise<Result<Post>>;
+  searchGlobal(query: string): Promise<Result<GlobalSearchResult>>;
   createPost(data: {
     subjectId: string;
     title: string;

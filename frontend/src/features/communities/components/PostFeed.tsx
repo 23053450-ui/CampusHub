@@ -6,8 +6,9 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MessageSquareDashed, Search } from "lucide-react";
+import { Plus, MessageSquareDashed, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ interface PostFeedProps {
   onVote: (postId: string, vote: 1 | -1 | null) => void;
   onRefresh?: () => void;
   searchQuery?: string;
+  onSearchChange?: (val: string) => void;
   onClearSearch?: () => void;
 }
 
@@ -40,6 +42,7 @@ export function PostFeed({
   onSortChange,
   onVote,
   searchQuery,
+  onSearchChange,
   onClearSearch,
 }: PostFeedProps) {
   const navigate = useNavigate();
@@ -60,35 +63,11 @@ export function PostFeed({
 
   return (
     <div className="space-y-4">
-      {/* Active Search Filter Status */}
-      {searchQuery && (
-        <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3.5 py-2 text-xs">
-          <div className="flex items-center gap-1.5 text-muted-foreground truncate mr-2">
-            <Search className="h-3.5 w-3.5 shrink-0" />
-            <span className="shrink-0">Searching titles for:</span>
-            <span className="font-semibold text-foreground truncate">"{searchQuery}"</span>
-            <span className="shrink-0 text-muted-foreground">
-              ({posts.length} {posts.length === 1 ? "match" : "matches"})
-            </span>
-          </div>
-          {onClearSearch && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearSearch}
-              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
-            >
-              Clear filter
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Action Bar matching wireframe: [New v] on left, [+ New Post] on right */}
-      <div className="flex items-center justify-between gap-3 pt-1">
+      {/* Action Bar matching Image 2: [New ⌄] on left, [🔍 Search in {subjectName}...] in middle, [+ New Post] on right */}
+      <div className="flex items-center gap-2.5 sm:gap-3 pt-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-medium">
+            <Button variant="outline" size="sm" className="h-8.5 gap-1.5 text-xs font-medium shrink-0">
               <span>{sortLabels[sortBy]}</span>
               <span className="text-muted-foreground text-[10px]">▼</span>
             </Button>
@@ -100,15 +79,66 @@ export function PostFeed({
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Community Body Search Bar */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder={`Search in ${subjectName}...`}
+            value={searchQuery || ""}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                onClearSearch?.();
+              }
+            }}
+            className="h-8.5 w-full pl-8.5 pr-8 text-xs bg-muted/20 hover:bg-muted/40 focus:bg-background border-border/80 focus:border-primary shadow-2xs rounded-lg transition-all"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={onClearSearch}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-sm transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
         <Button
           size="sm"
           onClick={handleOpenCreatePost}
-          className="h-8 gap-1.5 text-xs font-semibold shadow-xs"
+          className="h-8.5 gap-1.5 text-xs font-semibold shadow-xs shrink-0"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>New Post</span>
         </Button>
       </div>
+
+      {/* Active Search Filter Status */}
+      {searchQuery && posts.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3.5 py-1.5 text-xs">
+          <div className="flex items-center gap-1.5 text-muted-foreground truncate mr-2">
+            <Search className="h-3 w-3 shrink-0" />
+            <span className="shrink-0">Filtered by:</span>
+            <span className="font-semibold text-foreground truncate">&ldquo;{searchQuery}&rdquo;</span>
+            <span className="shrink-0 text-muted-foreground">
+              ({posts.length} {posts.length === 1 ? "post" : "posts"})
+            </span>
+          </div>
+          {onClearSearch && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearSearch}
+              className="h-5 px-1.5 text-xs text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Feed list */}
       {isLoading ? (
@@ -121,10 +151,10 @@ export function PostFeed({
           <div className="rounded-xl border border-dashed p-10 text-center space-y-2">
             <Search className="mx-auto h-8 w-8 text-muted-foreground/60" />
             <h4 className="text-sm font-semibold text-foreground">
-              No post titles matching "{searchQuery}"
+              No post titles matching &ldquo;{searchQuery}&rdquo;
             </h4>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              We couldn't find any discussion posts in {subjectName} with titles containing this search term.
+              We couldn&apos;t find any discussion posts in {subjectName} with titles containing this search term.
             </p>
             {onClearSearch && (
               <Button

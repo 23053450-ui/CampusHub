@@ -13,6 +13,7 @@ import type {
   Comment,
   ResourceNote,
   ResourceType,
+  GlobalSearchResult,
 } from "./types";
 
 export const realCommunitiesService: CommunitiesService = {
@@ -164,6 +165,68 @@ export const realCommunitiesService: CommunitiesService = {
       };
 
       return { data: post, error: null };
+    } catch (err: unknown) {
+      return {
+        data: null,
+        error: { code: "NETWORK", message: (err as Error).message },
+      };
+    }
+  },
+
+  async searchGlobal(query: string): Promise<Result<GlobalSearchResult>> {
+    try {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        return { data: { forums: [], posts: [] }, error: null };
+      }
+
+      // 1. Fetch matching subjects
+      const { data: subjectRows } = await supabase
+        .from("subjects")
+        .select("id, name, code, created_at")
+        .or(`name.ilike.%${trimmed}%,code.ilike.%${trimmed}%`)
+        .order("name", { ascending: true })
+        .limit(6);
+
+      const forums: SubjectForum[] = (subjectRows || []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        code: s.code,
+        memberCount: 1000,
+        isPinned: false,
+        description: "",
+      }));
+
+      // 2. Fetch matching posts
+      const { data: postRows } = await supabase
+        .from("posts")
+        .select("*, profiles!posts_author_id_fkey(handle, avatar_url), subjects(name)")
+        .ilike("title", `%${trimmed}%`)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const posts: (Post & { forumName?: string })[] = (postRows || []).map((row: any) => ({
+        id: row.id,
+        subjectId: row.subject_id,
+        forumName: row.subjects?.name || "Community",
+        authorId: row.author_id,
+        authorHandle: row.profiles?.handle || "Anonymous",
+        authorAvatarUrl: row.profiles?.avatar_url || null,
+        title: row.title,
+        body: row.body || "",
+        imageUrl: row.image_url || null,
+        images: row.images || (row.image_url ? [row.image_url] : []),
+        upvotes: row.upvotes ?? 0,
+        downvotes: row.downvotes ?? 0,
+        replyCount: row.reply_count ?? 0,
+        createdAt: row.created_at,
+        currentUserVote: null,
+      }));
+
+      return {
+        data: { forums, posts },
+        error: null,
+      };
     } catch (err: unknown) {
       return {
         data: null,

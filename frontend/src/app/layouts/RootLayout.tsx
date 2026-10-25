@@ -293,7 +293,7 @@ function RootLayoutContent() {
           {/* Centered Header Slot */}
           {center && (
             <div className="absolute inset-x-0 mx-auto flex items-center justify-center pointer-events-none px-4">
-              <div className="pointer-events-auto w-full max-w-xs sm:max-w-sm md:max-w-md flex justify-center">
+              <div className="pointer-events-auto w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl flex justify-center">
                 {center}
               </div>
             </div>

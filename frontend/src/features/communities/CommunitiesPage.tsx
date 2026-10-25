@@ -25,8 +25,8 @@ export default function CommunitiesPage() {
   const context = useOutletContext<CommunitiesContextType | undefined>();
 
   const activeForum = context?.activeForum || null;
-  const searchQuery = context?.searchQuery || "";
-  const debouncedSearch = useDebounce(searchQuery, 350);
+  const [communitySearchQuery, setCommunitySearchQuery] = useState("");
+  const debouncedSearch = useDebounce(communitySearchQuery, 350);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
@@ -40,12 +40,17 @@ export default function CommunitiesPage() {
   // Active Main Tab ("posts" | "resources")
   const [activeTab, setActiveTab] = useState<"posts" | "resources">("posts");
 
-  // Automatically switch to Posts tab when a search query is typed
+  // Reset body search filter when switching subject communities
   useEffect(() => {
-    if (searchQuery.trim()) {
+    setCommunitySearchQuery("");
+  }, [activeForum?.id]);
+
+  // Automatically switch to Posts tab when a search query is typed in the body
+  useEffect(() => {
+    if (communitySearchQuery.trim()) {
       setActiveTab("posts");
     }
-  }, [searchQuery]);
+  }, [communitySearchQuery]);
 
   // 1. Load Posts for active forum (debounced so rapid keystrokes don't flood Supabase)
   const loadPosts = () => {
@@ -182,8 +187,9 @@ export default function CommunitiesPage() {
                 onSortChange={setPostSort}
                 onVote={handleVotePost}
                 onRefresh={loadPosts}
-                searchQuery={searchQuery}
-                onClearSearch={() => context?.setSearchQuery("")}
+                searchQuery={communitySearchQuery}
+                onSearchChange={setCommunitySearchQuery}
+                onClearSearch={() => setCommunitySearchQuery("")}
               />
             </TabsContent>
 

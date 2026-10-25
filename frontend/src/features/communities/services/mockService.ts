@@ -12,6 +12,7 @@ import type {
   Comment,
   ResourceNote,
   ResourceType,
+  GlobalSearchResult,
 } from "./types";
 
 const INITIAL_SUBJECT_FORUMS: SubjectForum[] = [
@@ -552,6 +553,44 @@ export const mockCommunitiesService: CommunitiesService = {
       return { data: null, error: { code: "NOT_FOUND", message: "Post not found" } };
     }
     return { data: post, error: null };
+  },
+
+  async searchGlobal(query: string): Promise<Result<GlobalSearchResult>> {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) {
+      return { data: { forums: [], posts: [] }, error: null };
+    }
+
+    const terms = trimmed.split(/\s+/).filter(Boolean);
+
+    // Search subject forums by name, code, or description
+    const matchingForums = subjectForums.filter((f) => {
+      const target = `${f.name} ${f.code} ${f.description || ""}`.toLowerCase();
+      return terms.every((term) => target.includes(term));
+    });
+
+    // Forum lookup map for attaching forumName
+    const forumMap = new Map(subjectForums.map((f) => [f.id, f.name]));
+
+    // Search posts across all forums
+    const matchingPosts = posts
+      .filter((p) => {
+        const target = `${p.title} ${p.body || ""}`.toLowerCase();
+        return terms.every((term) => target.includes(term));
+      })
+      .map((p) => ({
+        ...p,
+        forumName: forumMap.get(p.subjectId) || "Community",
+      }));
+
+    return {
+      data: {
+        forums: matchingForums,
+        posts: matchingPosts,
+      },
+      error: null,
+    };
   },
 
   async createPost(data): Promise<Result<Post>> {
