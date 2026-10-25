@@ -7,7 +7,14 @@ MAX_TOTAL_DOC_CHARS = 80_000
 
 class Message(BaseModel):
     role: Literal["user", "assistant"]
-    content: str = Field(min_length=1, max_length=4000)
+    content: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def check_length(self):
+        limit = 4000 if self.role == "user" else 20000
+        if len(self.content) > limit:
+            raise ValueError(f"{self.role} message too long (max {limit} characters)")
+        return self
 
 
 class ContextDocument(BaseModel):
