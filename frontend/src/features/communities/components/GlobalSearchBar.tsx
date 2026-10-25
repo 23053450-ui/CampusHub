@@ -121,6 +121,7 @@ export function GlobalSearchBar() {
   };
 
   const hasResults = results.forums.length > 0 || results.posts.length > 0;
+  const isSearching = query.trim().length > 0 && (query.trim() !== debouncedQuery.trim() || isLoading);
 
   return (
     <div ref={containerRef} className="relative w-full max-w-lg md:max-w-xl lg:max-w-2xl">
@@ -148,7 +149,7 @@ export function GlobalSearchBar() {
 
         {/* Right Action Icons: Spinner / Clear Button */}
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-auto">
-          {isLoading ? (
+          {isSearching ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
           ) : query ? (
             <button
@@ -170,12 +171,12 @@ export function GlobalSearchBar() {
       {/* Floating Results Popover */}
       {isOpen && query.trim().length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-popover text-popover-foreground rounded-xl border border-border shadow-xl overflow-hidden max-h-[460px] overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-100">
-          {isLoading && !hasResults ? (
+          {isSearching && !hasResults ? (
             <div className="flex items-center justify-center p-8 text-xs text-muted-foreground gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span>Searching communities and posts...</span>
             </div>
-          ) : !hasResults ? (
+          ) : !isSearching && !hasResults ? (
             <div className="p-8 text-center space-y-1">
               <p className="text-sm font-medium text-foreground">
                 No results found for &ldquo;{query}&rdquo;
@@ -185,7 +186,7 @@ export function GlobalSearchBar() {
               </p>
             </div>
           ) : (
-            <div className="p-2 space-y-3">
+            <div className={`p-2 space-y-3 transition-opacity duration-150 ${isSearching ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
               {/* Group 1: Matching Communities / Subjects */}
               {results.forums.length > 0 && (
                 <div>
