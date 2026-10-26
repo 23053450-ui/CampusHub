@@ -14,7 +14,7 @@ import {
   FileText,
   Brain,
   LogOut,
-  User as UserIcon,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,6 +35,7 @@ import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Toaster } from "@/components/ui/sonner";
 import { useAuth } from "@/lib/auth-context";
+import { AvatarUploadDialog } from "@/features/auth/components/AvatarUploadDialog";
 
 function getInitials(name?: string | null, handle?: string): string {
   if (name) {
@@ -84,6 +85,7 @@ function RootLayoutContent() {
   const [isSidebarOpen, setIsSidebarOpen] = usePersistentToggle("campushub:sidebar:main", true);
   const [isStudentToolsOpen, setIsStudentToolsOpen] = usePersistentToggle("campushub:sidebar:student-tools", true);
   const [isSubjectsOpen, setIsSubjectsOpen] = usePersistentToggle("campushub:sidebar:subjects", true);
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -367,6 +369,14 @@ function RootLayoutContent() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => setIsAvatarDialogOpen(true)}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  <span>Change Profile Picture</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   className="text-destructive focus:text-destructive cursor-pointer"
                   onClick={async () => {
                     await logout();
@@ -387,6 +397,12 @@ function RootLayoutContent() {
         </main>
 
         <Toaster position="bottom-right" richColors />
+
+        {/* Profile Picture Upload Dialog */}
+        <AvatarUploadDialog
+          open={isAvatarDialogOpen}
+          onOpenChange={setIsAvatarDialogOpen}
+        />
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   isMock: boolean;
   setAuthUser: (profile: UserProfile | null) => void;
+  updateUserAvatar: (avatarUrl: string) => void;
   logout: () => Promise<void>;
 }
 
@@ -110,6 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(profile);
   };
 
+  const updateUserAvatar = (avatarUrl: string) => {
+    setUser((prev) => (prev ? { ...prev, avatarUrl } : null));
+  };
+
   const logout = async () => {
     if (isMock) {
       await authService.logout(true);
@@ -126,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isMock,
         setAuthUser,
+        updateUserAvatar,
         logout,
       }}
     >
