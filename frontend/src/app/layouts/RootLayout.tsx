@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   GraduationCap,
   PanelLeftClose,
@@ -13,9 +13,20 @@ import {
   GitBranch,
   FileText,
   Brain,
+  LogOut,
+  User as UserIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Subject } from "@/shared/user";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
 import { ImageViewerProvider } from "@/lib/image-viewer-context";
@@ -23,6 +34,21 @@ import { useResizable } from "@/lib/use-resizable";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Toaster } from "@/components/ui/sonner";
+import { useAuth } from "@/lib/auth-context";
+
+function getInitials(name?: string | null, handle?: string): string {
+  if (name) {
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  if (handle) {
+    return handle.slice(0, 2).toUpperCase();
+  }
+  return "ST";
+}
 
 const subjects: Subject[] = [
   { id: "cs301", name: "Database Management Systems", code: "CS301" },
@@ -59,6 +85,8 @@ function RootLayoutContent() {
   const [isStudentToolsOpen, setIsStudentToolsOpen] = usePersistentToggle("campushub:sidebar:student-tools", true);
   const [isSubjectsOpen, setIsSubjectsOpen] = usePersistentToggle("campushub:sidebar:subjects", true);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { actions, title: customTitle, center } = useHeader();
 
   const {
@@ -303,9 +331,53 @@ function RootLayoutContent() {
             {/* Feature Custom Header Actions */}
             {actions}
 
-            <Avatar className="h-8 w-8 cursor-pointer border hover:ring-2 hover:ring-primary/20 transition-all">
-              <AvatarFallback className="text-xs font-semibold">ST</AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  aria-label="User profile menu"
+                >
+                  <Avatar className="h-8 w-8 border">
+                    {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.fullName || "User"} />}
+                    <AvatarFallback className="text-xs font-semibold">
+                      {getInitials(user?.fullName, user?.handle)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold leading-none truncate max-w-[130px]">
+                        {user?.fullName || "Student User"}
+                      </p>
+                      <Badge
+                        variant={user?.role === "admin" ? "destructive" : user?.role === "moderator" ? "default" : "secondary"}
+                        className="text-[10px] capitalize px-1.5 py-0"
+                      >
+                        {user?.role || "student"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      @{user?.handle || "student"}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  onClick={async () => {
+                    await logout();
+                    navigate("/login", { replace: true });
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
