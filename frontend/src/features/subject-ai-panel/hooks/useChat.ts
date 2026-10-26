@@ -49,20 +49,13 @@ export function useChat(subjectId: string, subjectName?: string) {
   // Cancel any in-flight request if the panel unmounts
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const send = useCallback(
-    async (text: string) => {
-      const content = text.trim();
-      if (!content || isStreaming) return;
-
-      const userMsg: UiMessage = { id: crypto.randomUUID(), role: "user", content };
+  // Runs one request. `base` must end with the user message being answered.
+  const run = useCallback(
+    async (base: UiMessage[]) => {
       const botId = crypto.randomUUID();
-      const history = buildHistory([...messages, userMsg]);
+      const history = buildHistory(base);
 
-      setMessages((prev) => [
-        ...prev,
-        userMsg,
-        { id: botId, role: "assistant", content: "" },
-      ]);
+      setMessages([...base, { id: botId, role: "assistant", content: "" }]);
       setIsStreaming(true);
 
       const controller = new AbortController();
@@ -96,7 +89,44 @@ export function useChat(subjectId: string, subjectName?: string) {
         abortRef.current = null;
       }
     },
-    [messages, isStreaming, subjectId,subjectName],
+    [subjectId, subjectName],
+  );
+
+  const send = useCallback(
+    async (text: string) => {
+      const content = text.trim();
+      if (!content || isStreaming) return;
+      const userMsg: UiMessage = { id: crypto.randomUUID(), role: "user", content };
+      await run([...messages, userMsg]);
+    },
+    [messages, isStreaming, run],
+  );
+
+  // Re-answers the last question. Also used by "Try again" on an error bubble.
+  const regenerate = useCallback(async () => {
+    if (isStreaming) return;
+    let lastUser = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        lastUser = i;
+        break;
+      }
+    }
+    if (lastUser === -1) return;
+    await run(messages.slice(0, lastUser + 1));
+  }, [messages, isStreaming, run]);
+
+  // Edits a previously sent question and re-runs the answer
+  const edit = useCallback(
+    async (id: string, newText: string) => {
+      const content = newText.trim();
+      if (!content || isStreaming) return;
+      const index = messages.findIndex((m) => m.id === id);
+      if (index === -1) return;
+      const updatedUserMsg: UiMessage = { ...messages[index], content };
+      await run([...messages.slice(0, index), updatedUserMsg]);
+    },
+    [messages, isStreaming, run],
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
@@ -106,5 +136,5 @@ export function useChat(subjectId: string, subjectName?: string) {
     setMessages([]);
   }, []);
 
-  return { messages, isStreaming, send, stop, clear };
+  return { messages, isStreaming, send, regenerate, edit, stop, clear };
 }
