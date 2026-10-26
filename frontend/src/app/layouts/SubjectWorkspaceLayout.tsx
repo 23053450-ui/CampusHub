@@ -81,7 +81,7 @@ export default function SubjectWorkspaceLayout() {
             {...aiHandleProps}
           />
         )}
-        <div className="flex-1 overflow-auto w-full">
+        <div className="flex-1 min-h-0 w-full overflow-hidden">
           <SubjectAiPanelPage subjectName={subjectName} />
         </div>
       </aside>
