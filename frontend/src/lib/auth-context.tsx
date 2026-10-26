@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import type { UserProfile } from "@/shared/user";
+import type { UserProfile, UserRole } from "@/shared/user";
 import { authService } from "@/features/auth/services/authService";
 import { supabase } from "@/lib/supabase";
 
@@ -13,12 +13,21 @@ interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
   isMock: boolean;
-  setMockUser: (profile: UserProfile | null) => void;
-  loginMock: (roleOrEmail: string, password?: string) => boolean;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function mapSessionToProfile(userObj: any): UserProfile {
+  return {
+    id: userObj.id,
+    handle: userObj.user_metadata?.handle || userObj.email?.split("@")[0] || "user",
+    fullName: userObj.user_metadata?.full_name || null,
+    avatarUrl: userObj.user_metadata?.avatar_url || null,
+    role: (userObj.user_metadata?.role as UserRole) || "student",
+    createdAt: userObj.created_at || new Date().toISOString(),
+  };
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isMock = import.meta.env.VITE_USE_MOCKS === "true";
@@ -32,43 +41,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function initAuth() {
       try {
-        if (isMock) {
-          // 1. Check if VITE_MOCK_ROLE is specified in .env.local to skip login
-          if (mockRoleEnv && mockRoleEnv.trim()) {
-            const autoUser = authService.getAutoMockUser(mockRoleEnv.trim());
-            if (autoUser && isMounted) {
-              setUser(autoUser);
-              setIsLoading(false);
-              return;
-            }
-          }
-
-          // 2. Otherwise check for an active cached mock session in localStorage
-          const cached = authService.getCachedMockUser();
-          if (cached && isMounted) {
-            setUser(cached);
-          }
-          if (isMounted) {
+        // 1. Check if VITE_MOCK_ROLE is specified in .env.local to skip login
+        if (isMock && mockRoleEnv && mockRoleEnv.trim()) {
+          const autoUser = authService.getAutoMockUser(mockRoleEnv.trim());
+          if (autoUser && isMounted) {
+            setUser(autoUser);
             setIsLoading(false);
+            return;
           }
-          return;
         }
 
-        // Live Supabase Mode
+        // 2. Check active Supabase session (works for both live and mock fetch)
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user && isMounted) {
-          const profile = await authService.getLiveProfile(session.user.id);
-          if (profile && isMounted) {
-            setUser(profile);
-          } else if (isMounted) {
-            setUser({
-              id: session.user.id,
-              handle: session.user.email?.split("@")[0] || "user",
-              fullName: session.user.user_metadata?.full_name || null,
-              avatarUrl: session.user.user_metadata?.avatar_url || null,
-              role: "student",
-              createdAt: session.user.created_at,
-            });
+          if (!isMock) {
+            const profile = await authService.getLiveProfile(session.user.id);
+            setUser(profile || mapSessionToProfile(session.user));
+          } else {
+            setUser(mapSessionToProfile(session.user));
           }
         }
       } catch (err) {
@@ -82,63 +72,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    // Listen to live Supabase auth state changes if not in mock mode
-    if (!isMock) {
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          if (!session?.user) {
-            if (isMounted) setUser(null);
-            return;
-          }
-
-          const profile = await authService.getLiveProfile(session.user.id);
-          if (profile && isMounted) {
-            setUser(profile);
-          } else if (isMounted) {
-            setUser({
-              id: session.user.id,
-              handle: session.user.email?.split("@")[0] || "user",
-              fullName: session.user.user_metadata?.full_name || null,
-              avatarUrl: session.user.user_metadata?.avatar_url || null,
-              role: "student",
-              createdAt: session.user.created_at,
-            });
-          }
+    // Listen to auth state changes (sign in, sign out, token refresh)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!session?.user) {
+          if (isMounted) setUser(null);
+          return;
         }
-      );
 
-      return () => {
-        isMounted = false;
-        authListener.subscription.unsubscribe();
-      };
-    }
+        if (!isMock) {
+          const profile = await authService.getLiveProfile(session.user.id);
+          if (isMounted) setUser(profile || mapSessionToProfile(session.user));
+        } else {
+          if (isMounted) setUser(mapSessionToProfile(session.user));
+        }
+      }
+    );
 
     return () => {
       isMounted = false;
+      authListener.subscription.unsubscribe();
     };
   }, [isMock, mockRoleEnv]);
 
-  const setMockUser = (profile: UserProfile | null) => {
-    setUser(profile);
-  };
-
-  const loginMock = (roleOrEmail: string, password?: string): boolean => {
-    const res = authService.loginMock(roleOrEmail, password);
-    if (res.data) {
-      setUser(res.data);
-      return true;
-    }
-    return false;
-  };
-
   const logout = async () => {
+    await supabase.auth.signOut();
     if (isMock) {
-      authService.logoutMock();
-      setUser(null);
-    } else {
-      await authService.logoutSupabase();
-      setUser(null);
+      authService.logout(true);
     }
+    setUser(null);
   };
 
   return (
@@ -147,8 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isLoading,
         isMock,
-        setMockUser,
-        loginMock,
         logout,
       }}
     >
@@ -164,4 +124,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

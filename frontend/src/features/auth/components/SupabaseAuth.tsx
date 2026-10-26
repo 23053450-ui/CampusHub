@@ -1,6 +1,6 @@
 /**
- * @file SupabaseAuthForm.tsx
- * @description Official Supabase Auth UI integration styled with CampusHub theme tokens.
+ * @file SupabaseAuth.tsx
+ * @description Official Supabase pre-built Auth component with ThemeSupa styling.
  * @owner Platform Core Team
  */
 
@@ -9,7 +9,7 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/lib/supabase";
 
-export const SupabaseAuthForm: React.FC = () => {
+export const SupabaseAuth: React.FC = () => {
   return (
     <div className="w-full">
       <Auth
@@ -41,11 +41,10 @@ export const SupabaseAuthForm: React.FC = () => {
             },
           },
           className: {
-            container: "flex flex-col gap-3",
-            button: "font-medium transition-colors shadow-xs text-sm",
-            input: "text-sm",
+            button: "font-medium shadow-xs text-sm h-9",
+            input: "text-sm h-9",
             label: "text-xs font-semibold text-foreground",
-            anchor: "text-xs text-primary hover:underline",
+            anchor: "text-xs text-muted-foreground hover:text-foreground underline-offset-4",
             divider: "bg-border",
             message: "text-xs text-destructive",
           },
@@ -55,4 +54,3 @@ export const SupabaseAuthForm: React.FC = () => {
     </div>
   );
 };
-

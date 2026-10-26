@@ -1,6 +1,6 @@
 /**
  * @file authService.ts
- * @description Authentication service supporting both live Supabase Auth and offline Mock Mode.
+ * @description Unified authentication service supporting Supabase Auth and seamless offline mock fallback.
  * @owner Platform Core Team
  */
 
@@ -13,36 +13,140 @@ const MOCK_STORAGE_KEY = "campushub:mock_session";
 
 export const authService = {
   /**
-   * Log in in mock mode using email & password or a role preset.
+   * Universal sign-in handler.
    */
-  loginMock(emailOrRole: string, password?: string): Result<UserProfile> {
-    const key = emailOrRole.toLowerCase().trim();
+  async login(email: string, password: string, isMock: boolean): Promise<Result<UserProfile>> {
+    const cleanEmail = email.trim().toLowerCase();
 
-    // Check if directly a role preset key
-    if (MOCK_ACCOUNTS[key]) {
-      const account = MOCK_ACCOUNTS[key];
-      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(account.profile));
-      return { data: account.profile, error: null };
+    if (isMock) {
+      // 1. Check if email matches any pre-configured mock account
+      const match = Object.values(MOCK_ACCOUNTS).find(
+        (acc) => acc.email.toLowerCase() === cleanEmail
+      );
+
+      if (match) {
+        if (password && password !== match.password) {
+          return {
+            data: null,
+            error: { code: "UNAUTHENTICATED", message: "Invalid password. (Check .env.local for mock passwords)" },
+          };
+        }
+        localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(match.profile));
+        return { data: match.profile, error: null };
+      }
+
+      // 2. Allow any custom email in mock mode
+      const handle = cleanEmail.split("@")[0] || "student";
+      const customProfile: UserProfile = {
+        id: `mock-${handle}-uuid`,
+        handle,
+        fullName: handle.replace(/[^a-zA-Z0-9]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        avatarUrl: null,
+        role: "student",
+        createdAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(customProfile));
+      return { data: customProfile, error: null };
     }
 
-    // Check by email
-    const match = Object.values(MOCK_ACCOUNTS).find((acc) => acc.email.toLowerCase() === key);
-    if (!match) {
+    // Live Supabase Authentication
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      if (error || !data.user) {
+        return {
+          data: null,
+          error: { code: "UNAUTHENTICATED", message: error?.message || "Sign in failed" },
+        };
+      }
+
+      const profile = await this.getLiveProfile(data.user.id);
+      if (profile) {
+        return { data: profile, error: null };
+      }
+
+      // Fallback if profile row is provisioning
+      return {
+        data: {
+          id: data.user.id,
+          handle: data.user.email?.split("@")[0] || "user",
+          fullName: data.user.user_metadata?.full_name || null,
+          avatarUrl: data.user.user_metadata?.avatar_url || null,
+          role: "student",
+          createdAt: data.user.created_at,
+        },
+        error: null,
+      };
+    } catch (err: unknown) {
       return {
         data: null,
-        error: { code: "UNAUTHENTICATED", message: "Invalid email or password for mock account." },
+        error: { code: "NETWORK", message: (err as Error).message || "Network error during login" },
       };
     }
+  },
 
-    if (password && password !== match.password) {
+  /**
+   * Universal sign-up handler.
+   */
+  async signUp(email: string, password: string, fullName: string, isMock: boolean): Promise<Result<UserProfile>> {
+    const cleanEmail = email.trim().toLowerCase();
+    const handle = cleanEmail.split("@")[0] || "user";
+
+    if (isMock) {
+      const newMockProfile: UserProfile = {
+        id: `mock-${handle}-uuid`,
+        handle,
+        fullName: fullName.trim() || handle,
+        avatarUrl: null,
+        role: "student",
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(newMockProfile));
+      return { data: newMockProfile, error: null };
+    }
+
+    // Live Supabase Sign Up
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim() || handle,
+            handle,
+          },
+        },
+      });
+
+      if (error || !data.user) {
+        return {
+          data: null,
+          error: { code: "INTERNAL", message: error?.message || "Sign up failed" },
+        };
+      }
+
+      const profile = await this.getLiveProfile(data.user.id);
+      return {
+        data: profile || {
+          id: data.user.id,
+          handle,
+          fullName: fullName.trim() || handle,
+          avatarUrl: null,
+          role: "student",
+          createdAt: data.user.created_at,
+        },
+        error: null,
+      };
+    } catch (err: unknown) {
       return {
         data: null,
-        error: { code: "UNAUTHENTICATED", message: "Invalid password for mock account." },
+        error: { code: "NETWORK", message: (err as Error).message || "Network error during sign up" },
       };
     }
-
-    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(match.profile));
-    return { data: match.profile, error: null };
   },
 
   /**
@@ -75,14 +179,18 @@ export const authService = {
   },
 
   /**
-   * Clear mock session.
+   * Log out from active mode.
    */
-  logoutMock(): void {
-    localStorage.removeItem(MOCK_STORAGE_KEY);
+  async logout(isMock: boolean): Promise<void> {
+    if (isMock) {
+      localStorage.removeItem(MOCK_STORAGE_KEY);
+    } else {
+      await supabase.auth.signOut();
+    }
   },
 
   /**
-   * Live Supabase: Fetch profile from public.profiles table using current user ID.
+   * Live Supabase: Fetch profile from public.profiles table.
    */
   async getLiveProfile(userId: string): Promise<UserProfile | null> {
     const { data, error } = await supabase
@@ -91,9 +199,7 @@ export const authService = {
       .eq("id", userId)
       .maybeSingle();
 
-    if (error || !data) {
-      return null;
-    }
+    if (error || !data) return null;
 
     return {
       id: data.id,
@@ -104,47 +210,4 @@ export const authService = {
       createdAt: data.created_at,
     };
   },
-
-  /**
-   * Live Supabase: Sign in with email and password.
-   */
-  async loginWithSupabase(email: string, password: string): Promise<Result<UserProfile>> {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error || !data.user) {
-      return {
-        data: null,
-        error: { code: "UNAUTHENTICATED", message: error?.message || "Login failed" },
-      };
-    }
-
-    const profile = await this.getLiveProfile(data.user.id);
-    if (!profile) {
-      // Fallback profile if record is still provisioning
-      return {
-        data: {
-          id: data.user.id,
-          handle: data.user.email?.split("@")[0] || "user",
-          fullName: data.user.user_metadata?.full_name || null,
-          avatarUrl: data.user.user_metadata?.avatar_url || null,
-          role: "student",
-          createdAt: data.user.created_at,
-        },
-        error: null,
-      };
-    }
-
-    return { data: profile, error: null };
-  },
-
-  /**
-   * Live Supabase: Sign out.
-   */
-  async logoutSupabase(): Promise<void> {
-    await supabase.auth.signOut();
-  },
 };
-
