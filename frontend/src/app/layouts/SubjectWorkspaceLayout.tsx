@@ -78,7 +78,7 @@ export default function SubjectWorkspaceLayout() {
         )}
         <div
           style={{ width: `${aiPanelWidth}px`, minWidth: `${aiPanelWidth}px` }}
-          className={`flex-1 overflow-auto transition-transform duration-200 ease-in-out ${
+          className={`flex-1 min-h-0 overflow-hidden transition-transform duration-200 ease-in-out ${
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >

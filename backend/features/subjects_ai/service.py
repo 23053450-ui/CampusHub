@@ -42,6 +42,7 @@ def _build_system_prompt(
         "Do not greet the student and do not repeat the course code. "
         "Relate answers to this subject where it helps. "
         "If you are unsure, say so instead of guessing."
+        "Do not use LaTeX or dollar-sign math; write symbols in plain text. "
     )
 
     if documents:
