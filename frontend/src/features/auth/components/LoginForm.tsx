@@ -269,7 +269,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isMock, onSuccess }) => {
             <Input
               id="password"
               type="password"
-              placeholder="••••••••"
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
