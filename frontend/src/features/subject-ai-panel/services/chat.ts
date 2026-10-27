@@ -1,12 +1,11 @@
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 export type ChatDocument = { title: string; text: string };
 import { supabase } from "@/lib/supabase";
+import { BACKEND_URL } from "@/lib/api-client";
 export type StreamEvent =
   | { type: "token"; text: string }
   | { type: "done" }
   | { type: "error"; message: string };
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 export class ChatApiError extends Error {
   status: number;
@@ -59,7 +58,7 @@ export async function* streamChat(params: {
 }): AsyncGenerator<StreamEvent> {
   const token = await getAuthToken();
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/subjects-ai/chat/stream`, {
+  const response = await fetch(`${BACKEND_URL}/api/v1/subjects-ai/chat/stream`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
