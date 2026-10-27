@@ -5,13 +5,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    environment: str = "development"
     supabase_url: str = "https://placeholder.supabase.co"
     supabase_anon_key: str = "placeholder-anon-key"
     supabase_jwt_secret: str = "super-secret-placeholder-jwt-key-for-local-dev-only-32chars"
-    gemini_api_key: str = Field(
-        default="placeholder-gemini-key",
-        validation_alias=AliasChoices("gemini_api_key", "ai_api_key"),
-    )
+    gemini_api_key: str = ''
+    gemini_model: str = "gemini-3.8-flash"
     allowed_origins: Union[List[str], str] = ["http://localhost:5173"]
 
     @field_validator("allowed_origins", mode="before")

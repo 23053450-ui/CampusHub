@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   GraduationCap,
   PanelLeftClose,
@@ -15,38 +15,45 @@ import {
   Brain,
   Sun,
   Moon,
+  LogOut,
+  Camera,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Subject } from "@/shared/user";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { subjects } from "@/shared/subjects";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
+import { ImageViewerProvider } from "@/lib/image-viewer-context";
 import { useResizable } from "@/lib/use-resizable";
+import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
+import { Toaster } from "@/components/ui/sonner";
+import { useAuth } from "@/lib/auth-context";
+import { AvatarUploadDialog } from "@/features/auth/components/AvatarUploadDialog";
 
-const subjects: Subject[] = [
-  {
-    id: "cs301",
-    name: "Database Management Systems",
-    code: "CS301",
-  },
-  {
-    id: "cs302",
-    name: "Computer Networks",
-    code: "CS302",
-  },
-  {
-    id: "cs303",
-    name: "Operating Systems",
-    code: "CS303",
-  },
-  {
-    id: "cs304",
-    name: "Design and Analysis of Algorithms",
-    code: "CS304",
-  },
-];
+function getInitials(name?: string | null, handle?: string): string {
+  if (name) {
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  if (handle) {
+    return handle.slice(0, 2).toUpperCase();
+  }
+  return "ST";
+}
 
 const studentTools = [
   {
@@ -103,14 +110,14 @@ function getPageTitle(pathname: string): string {
 }
 
 function RootLayoutContent() {
- const [isSidebarOpen, setIsSidebarOpen] = useState(
-  () => typeof window !== "undefined" && window.innerWidth >= 768
-);
-  const [isStudentToolsOpen, setIsStudentToolsOpen] = useState(true);
-  const [isSubjectsOpen, setIsSubjectsOpen] = useState(true);
-
+  const [isSidebarOpen, setIsSidebarOpen] = usePersistentToggle("campushub:sidebar:main", true);
+  const [isStudentToolsOpen, setIsStudentToolsOpen] = usePersistentToggle("campushub:sidebar:student-tools", true);
+  const [isSubjectsOpen, setIsSubjectsOpen] = usePersistentToggle("campushub:sidebar:subjects", true);
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
   const location = useLocation();
-  const { actions, title: customTitle } = useHeader();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { actions, title: customTitle, center } = useHeader();
 
   const { theme, setTheme, resolvedTheme } = useTheme();
 
@@ -129,11 +136,9 @@ function RootLayoutContent() {
   });
 
   const pageTitle = customTitle || getPageTitle(location.pathname);
+  const isSubjectWorkspace = /^\/subjects\/[^/]+/.test(location.pathname);
 
-  const isStudentToolsActive = studentTools.some((tool) =>
-    location.pathname.startsWith(tool.to)
-  );
-
+  const isStudentToolsActive = studentTools.some((tool) => location.pathname.startsWith(tool.to));
   const isSubjectsActive = location.pathname.startsWith("/subjects");
 
   const closeSidebarOnMobile = () => {
@@ -147,25 +152,30 @@ function RootLayoutContent() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      {/* Sidebar */}
+    <div
+      className={`flex bg-background text-foreground ${
+        isSubjectWorkspace ? "h-dvh overflow-hidden" : "min-h-screen"
+      }`}
+    >
+      {/* Sidebar with toggle */}
       <aside
-        style={
-          isSidebarOpen
-            ? ({
-                "--sidebar-width": `${sidebarWidth}px`,
-              } as React.CSSProperties)
-            : undefined
-        }
-        className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card md:static relative ${
-          isSidebarDragging ? "" : "transition-[width] duration-200"
+        style={{
+          width: isSidebarOpen ? `${sidebarWidth}px` : 0,
+        }}
+        className={`fixed inset-y-0 left-0 z-30 flex flex-col bg-card md:static relative shrink-0 overflow-hidden ${
+          isSidebarDragging ? "" : "transition-[width] duration-200 ease-in-out"
         } ${
           isSidebarOpen
-            ? "w-64 md:w-[var(--sidebar-width,16rem)] translate-x-0 shrink-0"
-            : "-translate-x-full md:w-0 md:translate-x-0 md:border-r-0 md:overflow-hidden shrink-0"
+            ? "translate-x-0 overflow-visible border-r"
+            : "-translate-x-full md:translate-x-0 overflow-hidden border-r-0 pointer-events-none"
         }`}
       >
-        <div className="flex h-full w-full flex-col justify-between overflow-y-auto p-4">
+        <div
+          style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+          className={`flex h-full flex-col justify-between p-4 overflow-y-auto transition-transform duration-200 ease-in-out ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
           <div className="space-y-6">
             {/* CampusHub Logo */}
             <Link
@@ -343,32 +353,37 @@ function RootLayoutContent() {
         />
       )}
 
-      {/* Main Content */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        <header className="flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        {/* Top Header */}
+        <header className="relative flex h-14 items-center justify-between border-b pl-2 pr-4 lg:pr-6 bg-background">
+          <div className="flex items-center gap-2 shrink-0 z-10">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen((previous) => !previous)}
               aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
-              className="text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
             >
-              {isSidebarOpen ? (
-                <PanelLeftClose className="h-5 w-5" />
-              ) : (
-                <PanelLeft className="h-5 w-5" />
-              )}
+              {isSidebarOpen ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
             </Button>
 
-            <h1 className="text-base font-semibold text-foreground md:text-lg">
+            <h1 className="text-base font-semibold text-foreground md:text-lg truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
               {pageTitle}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Feature-specific Header Actions */}
+          {/* Centered Header Slot */}
+          {center && (
+            <div className="absolute inset-x-0 mx-auto flex items-center justify-center pointer-events-none px-4">
+              <div className="pointer-events-auto w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl flex justify-center">
+                {center}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 shrink-0 z-10">
+            {/* Feature Custom Header Actions */}
             {actions}
 
             {/* Theme Toggle */}
@@ -390,19 +405,82 @@ function RootLayoutContent() {
               )}
             </Button>
 
-            {/* User Avatar */}
-            <Avatar className="h-8 w-8 cursor-pointer border transition-all hover:ring-2 hover:ring-primary/20">
-              <AvatarFallback className="text-xs font-semibold">
-                ST
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="rounded-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  aria-label="User profile menu"
+                >
+                  <Avatar className="h-8 w-8 border">
+                    {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.fullName || "User"} />}
+                    <AvatarFallback className="text-xs font-semibold">
+                      {getInitials(user?.fullName, user?.handle)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold leading-none truncate max-w-[130px]">
+                        {user?.fullName || "Student User"}
+                      </p>
+                      <Badge
+                        variant={user?.role === "admin" ? "destructive" : user?.role === "moderator" ? "default" : "secondary"}
+                        className="text-[10px] capitalize px-1.5 py-0"
+                      >
+                        {user?.role || "student"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      @{user?.handle || "student"}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => setIsAvatarDialogOpen(true)}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  <span>Change Profile Picture</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  onClick={async () => {
+                    await logout();
+                    navigate("/login", { replace: true });
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        {/* Content Area */}
+        <main
+          className={
+            isSubjectWorkspace
+              ? "flex-1 min-h-0 overflow-hidden"
+              : "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8"
+          }
+        >
           <Outlet />
         </main>
+
+        <Toaster position="bottom-right" richColors />
+
+        {/* Profile Picture Upload Dialog */}
+        <AvatarUploadDialog
+          open={isAvatarDialogOpen}
+          onOpenChange={setIsAvatarDialogOpen}
+        />
       </div>
     </div>
   );
@@ -411,7 +489,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <HeaderProvider>
-      <RootLayoutContent />
+      <ImageViewerProvider>
+        <RootLayoutContent />
+      </ImageViewerProvider>
     </HeaderProvider>
   );
 }

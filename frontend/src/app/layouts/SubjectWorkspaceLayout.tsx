@@ -5,17 +5,20 @@
  */
 
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { PanelRight, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeaderActions } from "@/lib/header-context";
 import { useResizable } from "@/lib/use-resizable";
+import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import SubjectAiPanelPage from "@/features/subject-ai-panel/SubjectAiPanelPage";
+import { getSubjectById } from "@/shared/subjects";
 
 export default function SubjectWorkspaceLayout() {
-  const [isOpen, setIsOpen] = useState(true);
-
+  const [isOpen, setIsOpen] = usePersistentToggle("campushub:sidebar:ai-panel", true);
+  const { subjectId } = useParams<{ subjectId: string }>();
+  const subjectName = getSubjectById(subjectId)?.name;
   const {
     width: aiPanelWidth,
     isDragging: isAiDragging,
@@ -59,18 +62,12 @@ export default function SubjectWorkspaceLayout() {
 
       {/* Right Sidebar: AI Companion Study Panel */}
       <aside
-        style={
-          isOpen
-            ? ({ "--ai-panel-width": `${aiPanelWidth}px` } as React.CSSProperties)
-            : undefined
-        }
-        className={`border-l bg-card shrink-0 relative flex flex-col ${
+        style={{
+          width: isOpen ? `${aiPanelWidth}px` : 0,
+        }}
+        className={`bg-card shrink-0 relative flex flex-col overflow-hidden ${
           isAiDragging ? "" : "transition-[width] duration-200 ease-in-out"
-        } ${
-          isOpen
-            ? "w-[var(--ai-panel-width,24rem)] overflow-visible"
-            : "w-0 border-l-0 overflow-hidden"
-        }`}
+        } ${isOpen ? "border-l overflow-visible" : "border-l-0 pointer-events-none"}`}
       >
         {isOpen && (
           <ResizeHandle
@@ -79,10 +76,16 @@ export default function SubjectWorkspaceLayout() {
             {...aiHandleProps}
           />
         )}
-        <div className="flex-1 overflow-auto w-full">
-          <SubjectAiPanelPage />
+        <div
+          style={{ width: `${aiPanelWidth}px`, minWidth: `${aiPanelWidth}px` }}
+          className={`flex-1 min-h-0 overflow-hidden transition-transform duration-200 ease-in-out ${
+            isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <SubjectAiPanelPage subjectName={subjectName} />
         </div>
       </aside>
     </div>
+    
   );
 }

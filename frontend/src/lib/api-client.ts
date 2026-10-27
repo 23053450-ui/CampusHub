@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Result, AppError, AppErrorCode } from "@/shared/result";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+export const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "");
 
 function mapHttpError(status: number, errorPayload?: any): AppError {
   let code: AppErrorCode = "INTERNAL";

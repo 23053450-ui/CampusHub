@@ -129,3 +129,36 @@ Health check:
 curl http://localhost:8000/api/v1/health
 # {"status":"ok","version":"0.1.0"}
 ```
+
+---
+
+## 5. Authentication & Mock Accounts
+
+CampusHub features a dual-mode authentication layer:
+- **Live Mode (`VITE_USE_MOCKS=false`)**: Integrates the official **Supabase Auth UI** (`@supabase/auth-ui-react` & `@supabase/auth-ui-shared`) with `ThemeSupa` matching CampusHub's dark/light design system. It handles user registration, password logins, OAuth, and magic links with PostgreSQL Row Level Security (RLS) and JWT verification in FastAPI.
+- **Mock Mode (`VITE_USE_MOCKS=true`)**: Provides an offline authentication experience with quick role presets and test credentials.
+
+### Skipping the Mock Login Screen (`VITE_MOCK_ROLE`)
+
+When developing features offline, you can skip the login screen entirely by setting `VITE_MOCK_ROLE` in `frontend/.env.local`:
+
+```env
+# In frontend/.env.local
+VITE_MOCK_ROLE=student
+```
+
+* **When set to `student`, `moderator`, or `admin`:** The app bypasses `/login` and automatically authenticates you into that role upon loading.
+* **When left empty (`VITE_MOCK_ROLE=`):** The app presents the interactive Login screen where you can test the login experience or switch between accounts.
+
+### Working Test Accounts (Mock Mode)
+
+All test accounts use the password: `password123`
+
+| Role | Email | Password | Display Name | Handle | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Student** | `student@campushub.edu` | `password123` | Alex Chen | `@alex_chen` | Standard student account with enrolled subjects and daily quiz access. |
+| **Moderator** | `moderator@campushub.edu` | `password123` | Morgan Taylor | `@morgan_t` | Community moderator with elevated forum and moderation permissions. |
+| **Admin** | `admin@campushub.edu` | `password123` | Dr. Sarah Vance | `@sarah_vance` | System administrator with full access across modules. |
+
+You can also use the one-click preset buttons on the `/login` screen to sign in instantly as any role.
+
