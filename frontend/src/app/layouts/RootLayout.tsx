@@ -13,7 +13,11 @@ import {
   GitBranch,
   FileText,
   Brain,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Subject } from "@/shared/user";
@@ -22,41 +26,95 @@ import { useResizable } from "@/lib/use-resizable";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 
 const subjects: Subject[] = [
-  { id: "cs301", name: "Database Management Systems", code: "CS301" },
-  { id: "cs302", name: "Computer Networks", code: "CS302" },
-  { id: "cs303", name: "Operating Systems", code: "CS303" },
-  { id: "cs304", name: "Design and Analysis of Algorithms", code: "CS304" },
+  {
+    id: "cs301",
+    name: "Database Management Systems",
+    code: "CS301",
+  },
+  {
+    id: "cs302",
+    name: "Computer Networks",
+    code: "CS302",
+  },
+  {
+    id: "cs303",
+    name: "Operating Systems",
+    code: "CS303",
+  },
+  {
+    id: "cs304",
+    name: "Design and Analysis of Algorithms",
+    code: "CS304",
+  },
 ];
 
 const studentTools = [
-  { to: "/project-analysis", label: "Project Analysis", icon: GitBranch },
-  { to: "/resume-reviewer", label: "Resume Reviewer", icon: FileText },
-  { to: "/daily-quiz", label: "Daily Quiz", icon: Brain },
+  {
+    to: "/project-analysis",
+    label: "Project Analysis",
+    icon: GitBranch,
+  },
+  {
+    to: "/resume-reviewer",
+    label: "Resume Reviewer",
+    icon: FileText,
+  },
+  {
+    to: "/daily-quiz",
+    label: "Daily Quiz",
+    icon: Brain,
+  },
 ];
 
 function getPageTitle(pathname: string): string {
   if (pathname === "/") return "Dashboard";
-  if (pathname.startsWith("/communities")) return "Communities";
-  if (pathname.startsWith("/project-analysis")) return "Project Analysis";
-  if (pathname.startsWith("/resume-reviewer")) return "Resume Reviewer";
-  if (pathname.startsWith("/daily-quiz")) return "Daily Quiz";
+
+  if (pathname.startsWith("/communities")) {
+    return "Communities";
+  }
+
+  if (pathname.startsWith("/project-analysis")) {
+    return "Project Analysis";
+  }
+
+  if (pathname.startsWith("/resume-reviewer")) {
+    return "Resume Reviewer";
+  }
+
+  if (pathname.startsWith("/daily-quiz")) {
+    return "Daily Quiz";
+  }
+
   if (pathname.startsWith("/subjects")) {
     const parts = pathname.split("/").filter(Boolean);
+
     if (parts.length > 1) {
       const subject = subjects.find((s) => s.id === parts[1]);
-      if (subject) return subject.name;
+
+      if (subject) {
+        return subject.name;
+      }
     }
-    return "Subjects";
+
+    return "My Subjects";
   }
+
   return "Dashboard";
 }
 
 function RootLayoutContent() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+ const [isSidebarOpen, setIsSidebarOpen] = useState(
+  () => typeof window !== "undefined" && window.innerWidth >= 768
+);
   const [isStudentToolsOpen, setIsStudentToolsOpen] = useState(true);
   const [isSubjectsOpen, setIsSubjectsOpen] = useState(true);
+
   const location = useLocation();
   const { actions, title: customTitle } = useHeader();
+
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  const isDarkMode = resolvedTheme === "dark";
 
   const {
     width: sidebarWidth,
@@ -75,6 +133,7 @@ function RootLayoutContent() {
   const isStudentToolsActive = studentTools.some((tool) =>
     location.pathname.startsWith(tool.to)
   );
+
   const isSubjectsActive = location.pathname.startsWith("/subjects");
 
   const closeSidebarOnMobile = () => {
@@ -83,13 +142,19 @@ function RootLayoutContent() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      {/* Sidebar with toggle */}
+      {/* Sidebar */}
       <aside
         style={
           isSidebarOpen
-            ? ({ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties)
+            ? ({
+                "--sidebar-width": `${sidebarWidth}px`,
+              } as React.CSSProperties)
             : undefined
         }
         className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r bg-card md:static relative ${
@@ -100,30 +165,31 @@ function RootLayoutContent() {
             : "-translate-x-full md:w-0 md:translate-x-0 md:border-r-0 md:overflow-hidden shrink-0"
         }`}
       >
-        <div className="flex h-full w-full flex-col justify-between p-4 overflow-y-auto">
+        <div className="flex h-full w-full flex-col justify-between overflow-y-auto p-4">
           <div className="space-y-6">
-            {/* App Logo */}
+            {/* CampusHub Logo */}
             <Link
               to="/"
               onClick={closeSidebarOnMobile}
-              className="flex items-center gap-2.5 px-2 py-1.5 font-bold tracking-tight text-xl"
+              className="flex items-center gap-2.5 px-2 py-1.5 text-xl font-bold tracking-tight"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
                 <GraduationCap className="h-5 w-5" />
               </div>
+
               <span>CampusHub</span>
             </Link>
 
-            {/* Navigation links: Dashboard, Communities, Student tools, Subjects */}
+            {/* Main Navigation */}
             <nav className="space-y-1.5">
-              {/* 1. Dashboard */}
+              {/* Dashboard */}
               <NavLink
                 to="/"
                 onClick={closeSidebarOnMobile}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-secondary text-foreground font-semibold"
+                      ? "bg-secondary font-semibold text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`
                 }
@@ -132,14 +198,14 @@ function RootLayoutContent() {
                 <span>Dashboard</span>
               </NavLink>
 
-              {/* 2. Communities */}
+              {/* Communities */}
               <NavLink
                 to="/communities"
                 onClick={closeSidebarOnMobile}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-secondary text-foreground font-semibold"
+                      ? "bg-secondary font-semibold text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`
                 }
@@ -148,14 +214,16 @@ function RootLayoutContent() {
                 <span>Communities</span>
               </NavLink>
 
-              {/* 3. Student Tools */}
+              {/* Student Tools */}
               <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => setIsStudentToolsOpen((prev) => !prev)}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  onClick={() =>
+                    setIsStudentToolsOpen((previous) => !previous)
+                  }
+                  className={`flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isStudentToolsActive
-                      ? "text-foreground font-semibold"
+                      ? "font-semibold text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                   aria-expanded={isStudentToolsOpen}
@@ -164,18 +232,20 @@ function RootLayoutContent() {
                     <Wrench className="h-4 w-4 shrink-0" />
                     <span>Student Tools</span>
                   </div>
+
                   {isStudentToolsOpen ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 transition-transform text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   )}
                 </button>
 
                 {isStudentToolsOpen && (
-                  <div className="mt-1 ml-4 space-y-1 border-l pl-2">
+                  <div className="ml-4 mt-1 space-y-1 border-l pl-2">
                     {studentTools.map((tool) => {
                       const Icon = tool.icon;
                       const isActive = location.pathname.startsWith(tool.to);
+
                       return (
                         <NavLink
                           key={tool.to}
@@ -183,7 +253,7 @@ function RootLayoutContent() {
                           onClick={closeSidebarOnMobile}
                           className={`flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ${
                             isActive
-                              ? "bg-secondary text-foreground font-medium"
+                              ? "bg-secondary font-medium text-foreground"
                               : "text-muted-foreground hover:bg-muted hover:text-foreground"
                           }`}
                         >
@@ -196,47 +266,53 @@ function RootLayoutContent() {
                 )}
               </div>
 
-              {/* 4. Subjects */}
+              {/* My Subjects */}
               <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => setIsSubjectsOpen((prev) => !prev)}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  onClick={() => setIsSubjectsOpen((previous) => !previous)}
+                  className={`flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                     isSubjectsActive
-                      ? "text-foreground font-semibold"
+                      ? "font-semibold text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                   aria-expanded={isSubjectsOpen}
                 >
                   <div className="flex items-center gap-3">
                     <BookOpen className="h-4 w-4 shrink-0" />
-                    <span>Subjects</span>
+                    <span>My Subjects</span>
                   </div>
+
                   {isSubjectsOpen ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 transition-transform text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   )}
                 </button>
 
                 {isSubjectsOpen && (
-                  <div className="mt-1 ml-4 space-y-1 border-l pl-2">
-                    {subjects.map((sub) => {
-                      const isActive = location.pathname === `/subjects/${sub.id}`;
+                  <div className="ml-4 mt-1 space-y-1 border-l pl-2">
+                    {subjects.map((subject) => {
+                      const isActive =
+                        location.pathname === `/subjects/${subject.id}`;
+
                       return (
                         <NavLink
-                          key={sub.id}
-                          to={`/subjects/${sub.id}`}
+                          key={subject.id}
+                          to={`/subjects/${subject.id}`}
                           onClick={closeSidebarOnMobile}
                           className={`flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm transition-colors ${
                             isActive
-                              ? "bg-secondary text-foreground font-medium"
+                              ? "bg-secondary font-medium text-foreground"
                               : "text-muted-foreground hover:bg-muted hover:text-foreground"
                           }`}
                         >
-                          <span className="truncate pr-1.5">{sub.name}</span>
-                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground shrink-0">
-                            {sub.code}
+                          <span className="truncate pr-1.5">
+                            {subject.name}
+                          </span>
+
+                          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                            {subject.code}
                           </span>
                         </NavLink>
                       );
@@ -248,6 +324,7 @@ function RootLayoutContent() {
           </div>
         </div>
 
+        {/* Sidebar Resize Handle */}
         {isSidebarOpen && (
           <ResizeHandle
             side="right"
@@ -258,7 +335,7 @@ function RootLayoutContent() {
         )}
       </aside>
 
-      {/* Backdrop for mobile view when sidebar is open */}
+      {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -266,15 +343,15 @@ function RootLayoutContent() {
         />
       )}
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-        {/* Top Header */}
-        <header className="flex h-14 items-center justify-between border-b px-4 lg:px-6 bg-background">
+      {/* Main Content */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Header */}
+        <header className="flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              onClick={() => setIsSidebarOpen((previous) => !previous)}
               aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
               className="text-muted-foreground hover:text-foreground"
             >
@@ -291,16 +368,38 @@ function RootLayoutContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Feature Custom Header Actions */}
+            {/* Feature-specific Header Actions */}
             {actions}
 
-            <Avatar className="h-8 w-8 cursor-pointer border hover:ring-2 hover:ring-primary/20 transition-all">
-              <AvatarFallback className="text-xs font-semibold">ST</AvatarFallback>
+            {/* Theme Toggle */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label={
+                isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+              title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isDarkMode ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
+            {/* User Avatar */}
+            <Avatar className="h-8 w-8 cursor-pointer border transition-all hover:ring-2 hover:ring-primary/20">
+              <AvatarFallback className="text-xs font-semibold">
+                ST
+              </AvatarFallback>
             </Avatar>
           </div>
         </header>
 
-        {/* Content Area */}
+        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
