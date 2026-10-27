@@ -259,8 +259,8 @@ export default function DailyQuizPage() {
               const isSelected = selectedAnswer === index;
               const optionIsCorrect = index === question.correctAnswerIndex;
 
-             let optionStyle =
-  "border-gray-200 bg-white text-gray-900 hover:border-blue-400 hover:bg-blue-50";
+              let optionStyle =
+                "border-gray-200 hover:border-blue-400 hover:bg-blue-50";
 
               if (submitted && optionIsCorrect) {
                 optionStyle = "border-green-500 bg-green-50 text-green-800";
