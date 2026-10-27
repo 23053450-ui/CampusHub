@@ -16,20 +16,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Subject } from "@/shared/user";
+import { subjects } from "@/shared/subjects";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
 import { ImageViewerProvider } from "@/lib/image-viewer-context";
 import { useResizable } from "@/lib/use-resizable";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { Toaster } from "@/components/ui/sonner";
-
-const subjects: Subject[] = [
-  { id: "cs301", name: "Database Management Systems", code: "CS301" },
-  { id: "cs302", name: "Computer Networks", code: "CS302" },
-  { id: "cs303", name: "Operating Systems", code: "CS303" },
-  { id: "cs304", name: "Design and Analysis of Algorithms", code: "CS304" },
-];
 
 const studentTools = [
   { to: "/project-analysis", label: "Project Analysis", icon: GitBranch },
@@ -74,6 +67,7 @@ function RootLayoutContent() {
   });
 
   const pageTitle = customTitle || getPageTitle(location.pathname);
+  const isSubjectWorkspace = /^\/subjects\/[^/]+/.test(location.pathname);
 
   const isStudentToolsActive = studentTools.some((tool) => location.pathname.startsWith(tool.to));
   const isSubjectsActive = location.pathname.startsWith("/subjects");
@@ -85,7 +79,11 @@ function RootLayoutContent() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+  <div
+    className={`flex bg-background text-foreground ${
+      isSubjectWorkspace ? "h-dvh overflow-hidden" : "min-h-screen"
+    }`}
+  >
       {/* Sidebar with toggle */}
       <aside
         style={{
@@ -310,7 +308,13 @@ function RootLayoutContent() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main
+          className={
+            isSubjectWorkspace
+              ? "flex-1 min-h-0 overflow-hidden"
+              : "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8"
+          }
+        >
           <Outlet />
         </main>
 
