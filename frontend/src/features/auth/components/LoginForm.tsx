@@ -10,13 +10,7 @@ import { Loader2, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "../services/authService";
 import { useDebounce } from "@/lib/use-debounce";
 import type { UserProfile } from "@/shared/user";
@@ -288,16 +282,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isMock, onSuccess }) => {
                 ? "Signing in..."
                 : "Creating account..."
               : mode === "signin"
-              ? "Sign In"
-              : "Sign Up"}
+                ? "Sign In"
+                : "Sign Up"}
           </Button>
         </form>
 
         <div className="mt-4 text-center text-xs">
           <span className="text-muted-foreground">
-            {mode === "signin"
-              ? "Don't have an account? "
-              : "Already have an account? "}
+            {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
           </span>
           <button
             type="button"
