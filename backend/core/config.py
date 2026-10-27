@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    environment: str = "development"
     supabase_url: str = "https://placeholder.supabase.co"
     supabase_anon_key: str = "placeholder-anon-key"
     supabase_jwt_secret: str = "super-secret-placeholder-jwt-key-for-local-dev-only-32chars"

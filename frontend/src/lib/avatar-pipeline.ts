@@ -108,3 +108,4 @@ export async function processAvatarImage(file: File): Promise<ProcessedAvatarRes
     qualityUsed: quality,
   };
 }
+

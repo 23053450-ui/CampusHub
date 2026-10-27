@@ -18,8 +18,14 @@ async def get_current_user(
 
     token = credentials.credentials
 
-    # Convenient mock token bypass for local dev with mock mode
+    # Mock token bypass strictly restricted to non-production environments
     if token.startswith("mock-") or token == "placeholder-token":
+        if settings.environment.lower() == "production":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Mock authentication tokens are strictly prohibited in production.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         return {
             "id": "mock-student-uuid",
             "sub": "mock-student-uuid",

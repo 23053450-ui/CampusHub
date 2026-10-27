@@ -48,3 +48,5 @@ export const MOCK_ACCOUNTS: Record<string, MockAccount> = {
   },
 };
 
+export const MOCK_REGISTERED_USERS_KEY = "campushub:mock_registered_users";
+

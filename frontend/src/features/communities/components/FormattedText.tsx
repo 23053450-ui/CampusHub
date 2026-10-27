@@ -7,6 +7,25 @@
 import React from "react";
 import { useImageViewer } from "@/lib/image-viewer-context";
 
+/**
+ * Strict URL sanitizer to prevent XSS payloads (e.g. javascript:, data:, vbscript:).
+ * Only permits http://, https://, mailto:, or relative paths.
+ */
+function sanitizeUrl(rawUrl: string): string | null {
+  if (!rawUrl) return null;
+  const trimmed = rawUrl.trim();
+  if (/^(javascript:|data:|vbscript:)/i.test(trimmed)) {
+    return null;
+  }
+  if (/^(https?:\/\/|mailto:|\/)/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  return null;
+}
+
 interface FormattedTextProps {
   content: string;
   className?: string;
@@ -80,26 +99,28 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
       // Image: ![alt](url)
       const imgMatch = remainder.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
       if (imgMatch) {
-        const imgSrc = imgMatch[2];
-        const imgAlt = imgMatch[1] || "Attached image";
-        tokens.push(
-          <img
-            key={keyIdx++}
-            src={imgSrc}
-            alt={imgAlt}
-            onClick={(e) => {
-              e.stopPropagation();
-              openImageViewer({
-                images: [imgSrc],
-                initialIndex: 0,
-                title: imgAlt,
-              });
-            }}
-            className="my-2 max-h-60 max-w-sm rounded-lg border object-cover shadow-2xs cursor-zoom-in hover:opacity-95 transition-opacity"
-            loading="lazy"
-            title="Click to expand full screen"
-          />
-        );
+        const safeImgSrc = sanitizeUrl(imgMatch[2]);
+        if (safeImgSrc) {
+          const imgAlt = imgMatch[1] || "Attached image";
+          tokens.push(
+            <img
+              key={keyIdx++}
+              src={safeImgSrc}
+              alt={imgAlt}
+              onClick={(e) => {
+                e.stopPropagation();
+                openImageViewer({
+                  images: [safeImgSrc],
+                  initialIndex: 0,
+                  title: imgAlt,
+                });
+              }}
+              className="my-2 max-h-60 max-w-sm rounded-lg border object-cover shadow-2xs cursor-zoom-in hover:opacity-95 transition-opacity"
+              loading="lazy"
+              title="Click to expand full screen"
+            />
+          );
+        }
         remainder = remainder.slice(imgMatch[0].length);
         continue;
       }
@@ -107,18 +128,24 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
       // Link: [text](url)
       const linkMatch = remainder.match(/^\[([^\]]+)\]\(([^)]+)\)/);
       if (linkMatch) {
-        tokens.push(
-          <a
-            key={keyIdx++}
-            href={linkMatch[2]}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-medium break-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {linkMatch[1]}
-          </a>
-        );
+        const safeHref = sanitizeUrl(linkMatch[2]);
+        if (safeHref) {
+          tokens.push(
+            <a
+              key={keyIdx++}
+              href={safeHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium break-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {linkMatch[1]}
+            </a>
+          );
+        } else {
+          // If URL is unsafe/malicious, render harmlessly as plain text without link tag
+          tokens.push(linkMatch[1]);
+        }
         remainder = remainder.slice(linkMatch[0].length);
         continue;
       }

@@ -5,7 +5,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { MOCK_ACCOUNTS } from "@/features/auth/services/mockAccounts";
+import { MOCK_ACCOUNTS, MOCK_REGISTERED_USERS_KEY } from "@/features/auth/services/mockAccounts";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "placeholder-anon-key";
@@ -28,19 +28,42 @@ const mockFetch: typeof fetch = async (input, init) => {
         // Ignore
       }
 
-      const email = (body.email || "student@campushub.edu").toLowerCase();
-      const match = Object.values(MOCK_ACCOUNTS).find((acc) => acc.email.toLowerCase() === email);
+      let rawId = (body.email || body.username || body.identifier || "student@campushub.edu").toLowerCase().trim();
+      if (rawId.startsWith("@")) rawId = rawId.slice(1);
 
-      const profile = match
-        ? match.profile
-        : {
-            id: `mock-${email.split("@")[0]}-uuid`,
-            handle: email.split("@")[0],
-            fullName: email.split("@")[0].replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            avatarUrl: null,
-            role: "student" as const,
-            createdAt: new Date().toISOString(),
-          };
+      // Check pre-configured mock accounts by email or handle
+      let profile = Object.values(MOCK_ACCOUNTS).find(
+        (acc) => acc.email.toLowerCase() === rawId || acc.profile.handle.toLowerCase() === rawId
+      )?.profile;
+
+      // Check registered mock users from localStorage
+      if (!profile) {
+        try {
+          const registered = JSON.parse(localStorage.getItem(MOCK_REGISTERED_USERS_KEY) || "[]");
+          const found = registered.find(
+            (u: any) => u.email?.toLowerCase() === rawId || u.handle?.toLowerCase() === rawId
+          );
+          if (found) {
+            profile = found.profile;
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
+      if (!profile) {
+        const handle = rawId.includes("@") ? rawId.split("@")[0] : rawId;
+        profile = {
+          id: `mock-${handle}-uuid`,
+          handle,
+          fullName: handle.replace(/[^a-zA-Z0-9]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+          avatarUrl: null,
+          role: "student" as const,
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      const email = rawId.includes("@") ? rawId : `${profile.handle}@campushub.edu`;
 
       const mockResponse = {
         access_token: `mock-token-${profile.role}-${profile.id}`,
@@ -83,7 +106,8 @@ const mockFetch: typeof fetch = async (input, init) => {
       }
 
       const email = (body.email || "newstudent@campushub.edu").toLowerCase();
-      const handle = email.split("@")[0];
+      let handle = (body.data?.handle || email.split("@")[0]).toLowerCase().trim();
+      if (handle.startsWith("@")) handle = handle.slice(1);
       const fullName = body.data?.full_name || handle;
 
       const mockResponse = {
