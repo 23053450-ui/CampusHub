@@ -1,18 +1,29 @@
-import { ArrowUp, Square } from "lucide-react";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { ArrowUp, LoaderCircle, Plus, Square } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 
 type Props = {
   isStreaming: boolean;
   onSend: (text: string) => void;
   onStop: () => void;
+  onAddFiles?: (files: File[]) => void;
+  isUploadingFiles?: boolean;
+  canAddFiles?: boolean;
 };
 
-export function ChatInput({ isStreaming, onSend, onStop }: Props) {
+export function ChatInput({
+  isStreaming,
+  onSend,
+  onStop,
+  onAddFiles,
+  isUploadingFiles = false,
+  canAddFiles = true,
+}: Props) {
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const wasStreaming = useRef(false);
 
-  // Grow with the text, up to 128px
+  // Grow with the text, up to 128px.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -20,7 +31,7 @@ export function ChatInput({ isStreaming, onSend, onStop }: Props) {
     el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
   }, [value]);
 
-  // Put the cursor back in the box when a reply finishes
+  // Put the cursor back in the box when a reply finishes.
   useEffect(() => {
     if (wasStreaming.current && !isStreaming) ref.current?.focus();
     wasStreaming.current = isStreaming;
@@ -33,16 +44,40 @@ export function ChatInput({ isStreaming, onSend, onStop }: Props) {
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    // Enter sends, Shift+Enter makes a new line
+    // Enter sends, Shift+Enter makes a new line.
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       submit();
     }
   }
 
+  function handleFilesSelected(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.currentTarget.files ?? []);
+    e.currentTarget.value = "";
+    if (files.length) onAddFiles?.(files);
+  }
+
   return (
     <div className="border-t p-3">
       <div className="flex items-end gap-2 rounded-xl border bg-background p-2">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!onAddFiles || !canAddFiles || isUploadingFiles}
+          aria-label="Add study materials"
+          title="Add PDF, TXT or MD notes"
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {isUploadingFiles ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-5" />}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+          className="hidden"
+          onChange={handleFilesSelected}
+        />
         <textarea
           ref={ref}
           rows={1}

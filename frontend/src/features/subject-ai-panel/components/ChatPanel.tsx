@@ -1,26 +1,35 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, Bot, Trash2 } from "lucide-react";
+import { ArrowDown, Trash2 } from "lucide-react";
 import { useChat } from "../hooks/useChat";
 import { ChatInput } from "./ChatInput";
 import { ChatMessageBubble } from "./ChatMessageBubble";
 
-// Change this to whatever the chatbot should be called
-const BOT_NAME = "Study Assistant";
-
-export function ChatPanel({
-  subjectId,
-  subjectName,
-}: {
+interface ChatBodyProps {
   subjectId: string;
   subjectName?: string;
-}) {
+  onAddFiles?: (files: File[]) => void;
+  isUploadingFiles?: boolean;
+  canAddFiles?: boolean;
+}
+
+/**
+ * The scrollable message list + input bar for the Chat tool.
+ * The shared Study Assistant header and study-material tray live in SubjectAiPanelPage.
+ */
+export function ChatBody({
+  subjectId,
+  subjectName,
+  onAddFiles,
+  isUploadingFiles,
+  canAddFiles,
+}: ChatBodyProps) {
   const { messages, isStreaming, send, regenerate, edit, stop, clear } = useChat(
     subjectId,
     subjectName,
   );
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const stickRef = useRef(true); // only follow new text if the reader is at the bottom
+  const stickRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
 
   function handleScroll() {
@@ -31,7 +40,6 @@ export function ChatPanel({
     setShowJump(!nearBottom);
   }
 
-  // Scroll ONLY the message list, never the page
   useEffect(() => {
     const el = scrollRef.current;
     if (el && stickRef.current) el.scrollTop = el.scrollHeight;
@@ -61,13 +69,9 @@ export function ChatPanel({
   ];
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <header className="flex h-10 shrink-0 items-center justify-between border-b px-3">
-        <div className="flex items-center gap-2">
-          <Bot className="size-4 text-muted-foreground" />
-          <h2 className="text-sm font-medium">{BOT_NAME}</h2>
-        </div>
-        {messages.length > 0 && (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {messages.length > 0 && (
+        <div className="flex shrink-0 justify-end border-b px-2 py-0.5">
           <button
             type="button"
             onClick={() => {
@@ -80,8 +84,8 @@ export function ChatPanel({
           >
             <Trash2 className="size-4" />
           </button>
-        )}
-      </header>
+        </div>
+      )}
 
       <div className="relative min-h-0 flex-1">
         <div
@@ -114,7 +118,11 @@ export function ChatPanel({
                   message={m}
                   streaming={isLast && isStreaming}
                   onRegenerate={isLast && !isStreaming ? handleRegenerate : undefined}
-                  onEdit={m.role === "user" && !isStreaming ? (text) => void edit(m.id, text) : undefined}
+                  onEdit={
+                    m.role === "user" && !isStreaming
+                      ? (text) => void edit(m.id, text)
+                      : undefined
+                  }
                 />
               );
             })
@@ -134,7 +142,17 @@ export function ChatPanel({
         )}
       </div>
 
-      <ChatInput isStreaming={isStreaming} onSend={handleSend} onStop={stop} />
+      <ChatInput
+        isStreaming={isStreaming}
+        onSend={handleSend}
+        onStop={stop}
+        onAddFiles={onAddFiles}
+        isUploadingFiles={isUploadingFiles}
+        canAddFiles={canAddFiles}
+      />
     </div>
   );
 }
+
+// Keep the old ChatPanel export so nothing outside this feature breaks.
+export { ChatBody as ChatPanel };
