@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    environment: str = "development"
     allow_mock_tokens: bool = False
     supabase_url: str = "https://placeholder.supabase.co"
     supabase_anon_key: str = "placeholder-anon-key"

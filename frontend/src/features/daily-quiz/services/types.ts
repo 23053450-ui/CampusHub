@@ -12,11 +12,15 @@ export interface QuizQuestion {
   options: string[];
   correctAnswerIndex?: number;
   explanation?: string;
+  subjectId?: string;
+  topic?: string;
+  difficulty?: string;
 }
 
 export interface TodayQuizResponse {
   date: string;
   questions: QuizQuestion[];
+  alreadySubmitted?: boolean;
 }
 
 export interface QuestionFeedbackItem {

@@ -22,13 +22,7 @@ async def get_today_quiz(
     current_user: dict = Depends(get_current_user),
 ):
     """Return today's quiz questions."""
-
-    from datetime import date
-
-    return {
-        "date": date.today().isoformat(),
-        "questions": get_today_questions(),
-    }
+    return get_today_questions(current_user)
 
 
 @router.post(
@@ -40,5 +34,4 @@ async def submit_daily_quiz(
     current_user: dict = Depends(get_current_user),
 ):
     """Evaluate a student's quiz answers."""
-
-    return submit_quiz(request)
+    return submit_quiz(current_user, request)

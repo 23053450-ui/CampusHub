@@ -96,9 +96,14 @@ export const mockDailyQuizService: DailyQuizService = {
   async getTodayQuiz(): Promise<Result<TodayQuizResponse>> {
     await delay(300);
 
+    const streak = loadStreak();
+    const today = new Date().toISOString().slice(0, 10);
+    const alreadySubmitted = streak.lastCompletedDate === today;
+
     return {
       data: {
-        date: new Date().toISOString().slice(0, 10),
+        date: today,
+        alreadySubmitted,
         questions: mockQuestions,
       },
       error: null,
@@ -111,6 +116,17 @@ export const mockDailyQuizService: DailyQuizService = {
     await delay(300);
 
     const streak = loadStreak();
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (streak.lastCompletedDate === today) {
+      return {
+        data: null,
+        error: {
+          code: "VALIDATION",
+          message: "Daily quiz has already been completed for today.",
+        },
+      };
+    }
 
     const details: Record<string, { isCorrect: boolean; correctAnswerIndex: number; explanation: string }> = {};
     let score = 0;
@@ -126,26 +142,22 @@ export const mockDailyQuizService: DailyQuizService = {
     });
 
     const total = mockQuestions.length;
-    const today = new Date().toISOString().slice(0, 10);
-
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
 
-    if (streak.lastCompletedDate !== today) {
-      streak.currentStreak =
-        streak.lastCompletedDate === yesterday
-          ? streak.currentStreak + 1
-          : 1;
+    streak.currentStreak =
+      streak.lastCompletedDate === yesterday
+        ? streak.currentStreak + 1
+        : 1;
 
-      streak.bestStreak = Math.max(
-        streak.bestStreak,
-        streak.currentStreak,
-      );
+    streak.bestStreak = Math.max(
+      streak.bestStreak,
+      streak.currentStreak,
+    );
 
-      streak.lastCompletedDate = today;
-      saveStreak(streak);
-    }
+    streak.lastCompletedDate = today;
+    saveStreak(streak);
 
     return {
       data: {

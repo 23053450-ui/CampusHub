@@ -1,3 +1,4 @@
+import logging
 from functools import lru_cache
 import jwt
 from jwt import PyJWKClient, PyJWTError
@@ -5,6 +6,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from core.config import settings
+
+logger = logging.getLogger(__name__)
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -27,9 +30,9 @@ async def get_current_user(
 
     token = credentials.credentials
 
-    # Mock token bypass strictly restricted to local development with explicit opt-in
+    # Mock token bypass strictly restricted with explicit opt-in
     if token.startswith("mock-") or token == "placeholder-token":
-        if not (settings.allow_mock_tokens and settings.environment.lower() == "development"):
+        if not settings.allow_mock_tokens:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Mock authentication tokens are disabled.",
@@ -66,8 +69,9 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     except PyJWTError as e:
+        logger.warning("JWT validation failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication token: {str(e)}",
+            detail="Invalid authentication token",
             headers={"WWW-Authenticate": "Bearer"},
         )

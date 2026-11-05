@@ -1,12 +1,10 @@
-
 /**
  * @file realService.ts
- * @description Real service implementation for Daily Quiz feature.
+ * @description Real service implementation for Daily Quiz feature using Supabase RPCs.
  * @owner Daily Quiz Team
  */
 
 import { supabase } from "@/lib/supabase";
-import { apiGet, apiPost } from "@/lib/api-client";
 import type { Result } from "@/shared/result";
 import type {
   DailyQuizService,
@@ -17,33 +15,62 @@ import type {
   UserStreak,
 } from "./types";
 
+interface RpcTodayQuizResponse {
+  date: string;
+  already_submitted: boolean;
+  questions: Array<{
+    id: string;
+    subject_id?: string;
+    question: string;
+    options: string[];
+    difficulty?: string;
+    topic?: string;
+  }>;
+}
+
+interface RpcSubmitQuizResponse {
+  score: number;
+  total: number;
+  streak_count: number;
+  details?: Record<
+    string,
+    {
+      is_correct: boolean;
+      correct_answer_index: number;
+      explanation: string;
+    }
+  >;
+}
+
 export const realDailyQuizService: DailyQuizService = {
   async getTodayQuiz(): Promise<Result<TodayQuizResponse>> {
-    const result = await apiGet<{
-      date: string;
-      questions: Array<{
-        id: string;
-        question: string;
-        options: string[];
-        correct_answer_index?: number;
-        explanation?: string;
-      }>;
-    }>("/api/v1/daily-quiz/today");
+    const { data, error } = await supabase.rpc("get_today_quiz");
 
-    if (result.error) {
-      return { data: null, error: result.error };
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: "INTERNAL",
+          message: error.message,
+          details: error,
+        },
+      };
     }
+
+    const res = data as RpcTodayQuizResponse;
 
     return {
       data: {
-        date: result.data.date,
-        questions: result.data.questions.map(
-          (question): QuizQuestion => ({
-            id: question.id,
-            question: question.question,
-            options: question.options,
-            correctAnswerIndex: question.correct_answer_index,
-            explanation: question.explanation,
+        date: res.date,
+        alreadySubmitted: res.already_submitted,
+        questions: (res.questions || []).map(
+          (q): QuizQuestion => ({
+            id: q.id,
+            question: q.question,
+            options: q.options,
+            subjectId: q.subject_id,
+            difficulty: q.difficulty,
+            topic: q.topic,
           }),
         ),
       },
@@ -54,27 +81,26 @@ export const realDailyQuizService: DailyQuizService = {
   async submitQuiz(
     answers: Record<string, number>,
   ): Promise<Result<QuizSubmissionResult>> {
-    const result = await apiPost<{
-      score: number;
-      total: number;
-      streak_count: number;
-      details?: Record<
-        string,
-        {
-          is_correct: boolean;
-          correct_answer_index: number;
-          explanation: string;
-        }
-      >;
-    }>("/api/v1/daily-quiz/submit", { answers });
+    const { data, error } = await supabase.rpc("submit_daily_quiz", {
+      p_answers: answers,
+    });
 
-    if (result.error) {
-      return { data: null, error: result.error };
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: "INTERNAL",
+          message: error.message,
+          details: error,
+        },
+      };
     }
 
+    const res = data as RpcSubmitQuizResponse;
+
     const details: Record<string, QuestionFeedbackItem> = {};
-    if (result.data.details) {
-      Object.entries(result.data.details).forEach(([qid, item]) => {
+    if (res.details) {
+      Object.entries(res.details).forEach(([qid, item]) => {
         details[qid] = {
           isCorrect: item.is_correct,
           correctAnswerIndex: item.correct_answer_index,
@@ -85,9 +111,9 @@ export const realDailyQuizService: DailyQuizService = {
 
     return {
       data: {
-        score: result.data.score,
-        total: result.data.total,
-        streakCount: result.data.streak_count,
+        score: res.score,
+        total: res.total,
+        streakCount: res.streak_count,
         details,
       },
       error: null,

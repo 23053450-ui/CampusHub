@@ -43,12 +43,14 @@ export default function DailyQuizPage() {
   const [feedbackDetails, setFeedbackDetails] = useState<
     Record<string, QuestionFeedbackItem>
   >({});
+  const [alreadyCompletedToday, setAlreadyCompletedToday] = useState(false);
 
   const question = quizQuestions[currentQuestion];
 
   async function loadQuiz() {
     setLoading(true);
     setErrorMessage("");
+    setAlreadyCompletedToday(false);
 
     const result = await dailyQuizService.getTodayQuiz();
 
@@ -56,6 +58,10 @@ export default function DailyQuizPage() {
       setErrorMessage(result.error.message);
       setLoading(false);
       return;
+    }
+
+    if (result.data.alreadySubmitted) {
+      setAlreadyCompletedToday(true);
     }
 
     setQuizQuestions(result.data.questions);
@@ -164,6 +170,52 @@ export default function DailyQuizPage() {
             <Button onClick={() => void loadQuiz()}>
               <RotateCcw className="mr-2 size-4" /> Try Again
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (alreadyCompletedToday) {
+    return (
+      <div className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6 lg:p-8">
+        <Card className="border-border bg-card shadow-sm text-center">
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <CheckCircle2 className="size-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                You&apos;re All Caught Up!
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                You have already completed today&apos;s daily quiz and logged your attendance. Come back tomorrow for 5 new questions!
+              </p>
+            </div>
+
+            {streak && (
+              <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-muted/30 p-4">
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Current Streak
+                  </span>
+                  <div className="mt-1 flex items-center gap-1.5 text-2xl font-bold text-foreground">
+                    <Flame className="size-5 fill-orange-500 text-orange-500" />
+                    <span>{streak.currentStreak} {streak.currentStreak === 1 ? "Day" : "Days"}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Best Streak
+                  </span>
+                  <div className="mt-1 flex items-center gap-1.5 text-2xl font-bold text-foreground">
+                    <Trophy className="size-5 text-amber-500" />
+                    <span>{streak.bestStreak} {streak.bestStreak === 1 ? "Day" : "Days"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
