@@ -71,6 +71,8 @@ backend/
 ├── features/                   # 1:1 Matching Feature Modules
 │   ├── subjects_ai/            # router.py, schemas.py, service.py
 │   └── daily_quiz/             # router.py, schemas.py, service.py
+├── scripts/                    # Maintenance & utility scripts
+│   └── generate_quiz_questions.py # Daily quiz question generator
 ├── shared/                     # Health check endpoint
 │   └── health.py
 ├── main.py                     # Registers routers under /api/v1/...
@@ -115,6 +117,7 @@ python -m venv .venv
 # macOS/Linux:
 source .venv/bin/activate
 
+cp .env.example .env
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
