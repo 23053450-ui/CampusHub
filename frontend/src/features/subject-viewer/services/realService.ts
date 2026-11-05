@@ -13,20 +13,20 @@ export const realSubjectViewerService: SubjectViewerService = {
   async getNotesTree(subjectId): Promise<Result<SubjectNote[]>> {
     const { data, error } = await supabase
       .from("notes")
-      .select("id, subject_id, title, tag, storage_path, content, is_shared, is_approved, user_id, created_at")
+      .select("id, subject_id, title, tag, storage_path, content, is_shared, status, user_id, created_at")
       .eq("subject_id", subjectId)
       .order("created_at");
     if (error) return { data: null, error: toError(error.message) };
     const { data: auth } = await supabase.auth.getUser();
     const visibleNotes = (data ?? []).filter((note) => {
       // Community documents are only surfaced when an admin approved them.
-      if (["Lecture / Day wise", "Unit wise", "PYQ"].includes(note.tag)) return note.is_shared && note.is_approved;
+      if (["Lecture / Day wise", "Unit wise", "PYQ"].includes(note.tag)) return note.is_shared && note.status === "approved";
       // "Private" remains the student's own personal text-note area.
       return note.tag === "Private" && note.user_id === auth.user?.id;
     });
     const mapped = await Promise.all(visibleNotes.map(async (note) => {
       let contentUrl: string | null = null;
-      if (note.storage_path) {
+      if (note.tag !== "Private" && note.storage_path) {
         const signed = await supabase.storage.from("subject-notes").createSignedUrl(note.storage_path, 60 * 30);
         contentUrl = signed.data?.signedUrl ?? null;
       }
@@ -37,8 +37,16 @@ export const realSubjectViewerService: SubjectViewerService = {
   async createTextNote(input: CreateTextNoteInput): Promise<Result<SubjectNote>> {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return { data: null, error: { code: "UNAUTHENTICATED", message: "Sign in to save personal notes." } };
+    const storagePath = `${auth.user.id}/private-notes/${crypto.randomUUID()}`;
     const { data, error } = await supabase.from("notes").insert({
-      subject_id: input.subjectId, user_id: auth.user.id, title: input.title, tag: "Private", content: input.content, storage_path: "",
+      subject_id: input.subjectId,
+      user_id: auth.user.id,
+      title: input.title,
+      tag: "Private",
+      content: input.content,
+      storage_path: storagePath,
+      status: "pending",
+      is_shared: false,
     }).select("id, subject_id, title, tag, storage_path, content, created_at").single();
     if (error) return { data: null, error: toError(error.message) };
     return { data: { id: data.id, subjectId: data.subject_id, title: data.title, tag: data.tag, storagePath: data.storage_path || null, content: data.content, createdAt: data.created_at }, error: null };

@@ -103,7 +103,7 @@ export const realSubjectViewerService: SubjectViewerService = {
     return { data, error: null };
   },
   async getNotesTree(subjectId: string) {
-    const { data, error } = await supabase.from("notes").select("*").eq("subject_id", subjectId).eq("is_approved", true);
+    const { data, error } = await supabase.from("notes").select("*").eq("subject_id", subjectId).eq("status", "approved");
     if (error) return { data: null, error: { code: "INTERNAL", message: error.message } };
     return { data: data as SubjectNote[], error: null };
   },

@@ -25,19 +25,14 @@ export const PrivacyOnboardingModal: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
 
-  // Only display if user is logged in, hasn't completed privacy onboarding, AND just registered in this session
-  const isJustRegistered =
-    typeof window !== "undefined" &&
-    sessionStorage.getItem("campushub:just_registered") === "true";
-
-  if (!user || user.privacyOnboardingCompleted || !isJustRegistered || !isOpen) {
+  // Only display if user is logged in and hasn't completed privacy onboarding
+  if (!user || user.privacyOnboardingCompleted || !isOpen) {
     return null;
   }
 
   const handleSave = async () => {
     setIsSaving(true);
     const isMock = import.meta.env.VITE_USE_MOCKS === "true";
-    sessionStorage.removeItem("campushub:just_registered");
     const res = await authService.updatePrivacySettings(user.id, isPrivate, isMock);
     setIsSaving(false);
 
@@ -60,7 +55,6 @@ export const PrivacyOnboardingModal: React.FC = () => {
   };
 
   const handleDismiss = async () => {
-    sessionStorage.removeItem("campushub:just_registered");
     setIsOpen(false);
     const isMock = import.meta.env.VITE_USE_MOCKS === "true";
     // Default to public if dismissed without explicit selection

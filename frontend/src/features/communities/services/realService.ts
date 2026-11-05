@@ -34,10 +34,16 @@ function sanitizeSearchQuery(query: string): string {
 export const realCommunitiesService: CommunitiesService = {
   async getSubjectForums(): Promise<Result<SubjectForum[]>> {
     try {
-      const { data: subjects, error } = await supabase
-        .from("subjects")
-        .select("id, name, code, created_at")
-        .order("name", { ascending: true });
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        return { data: [], error: null };
+      }
+
+      // Query enrolled subjects from user_subjects
+      const { data: enrolledRows, error } = await supabase
+        .from("user_subjects")
+        .select("subject_id, subjects(id, name, code, created_at)")
+        .eq("user_id", user.id);
 
       if (error) {
         return {
@@ -46,9 +52,17 @@ export const realCommunitiesService: CommunitiesService = {
         };
       }
 
+      if (!enrolledRows || enrolledRows.length === 0) {
+        return { data: [], error: null };
+      }
+
+      const subjects = enrolledRows
+        .map((row: any) => row.subjects)
+        .filter(Boolean);
+
       // Query enrollment counts for dynamic community sizing
       const forums: SubjectForum[] = await Promise.all(
-        (subjects || []).map(async (s) => {
+        subjects.map(async (s: any) => {
           const { count } = await supabase
             .from("user_subjects")
             .select("*", { count: "exact", head: true })
@@ -64,7 +78,48 @@ export const realCommunitiesService: CommunitiesService = {
         })
       );
 
+      // Sort alphabetically by subject name
+      forums.sort((a, b) => a.name.localeCompare(b.name));
+
       return { data: forums, error: null };
+    } catch (err: unknown) {
+      return {
+        data: null,
+        error: { code: "NETWORK", message: (err as Error).message },
+      };
+    }
+  },
+
+  async getSubjectForum(subjectId: string): Promise<Result<SubjectForum>> {
+    try {
+      const { data: s, error } = await supabase
+        .from("subjects")
+        .select("id, name, code")
+        .eq("id", subjectId)
+        .single();
+
+      if (error || !s) {
+        return {
+          data: null,
+          error: { code: "NOT_FOUND", message: error?.message || "Subject forum not found" },
+        };
+      }
+
+      const { count } = await supabase
+        .from("user_subjects")
+        .select("*", { count: "exact", head: true })
+        .eq("subject_id", s.id);
+
+      return {
+        data: {
+          id: s.id,
+          name: s.name,
+          code: s.code,
+          memberCount: Math.max(1, count ?? 0),
+          isPinned: false,
+        },
+        error: null,
+      };
     } catch (err: unknown) {
       return {
         data: null,
@@ -926,7 +981,8 @@ export const realCommunitiesService: CommunitiesService = {
       let query = supabase
         .from("notes")
         .select("*, profiles!notes_user_id_fkey(handle, full_name)")
-        .eq("status", "pending");
+        .eq("status", "pending")
+        .neq("tag", "Private");
 
       if (subjectId) {
         query = query.eq("subject_id", subjectId);

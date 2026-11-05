@@ -151,7 +151,16 @@ export default function CommunitiesPage() {
       {activeForum ? (
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Forum Header Banner */}
-          <CommunityHeader forum={activeForum} />
+          <CommunityHeader
+            forum={activeForum}
+            isPinned={context?.isPinned}
+            isEnrolled={context?.isEnrolled}
+            onTogglePin={
+              context?.onTogglePin
+                ? () => context.onTogglePin(activeForum.id)
+                : undefined
+            }
+          />
 
           {/* Main Tabs: Posts | Resources */}
           <Tabs

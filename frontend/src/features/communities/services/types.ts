@@ -122,6 +122,7 @@ export interface GlobalSearchResult {
 
 export interface CommunitiesService {
   getSubjectForums(): Promise<Result<SubjectForum[]>>;
+  getSubjectForum(subjectId: string): Promise<Result<SubjectForum>>;
   getPosts(subjectId: string, sort?: "new" | "top" | "hot", search?: string): Promise<Result<Post[]>>;
   getPost(postId: string): Promise<Result<Post>>;
   searchGlobal(query: string): Promise<Result<GlobalSearchResult>>;

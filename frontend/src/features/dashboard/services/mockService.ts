@@ -85,11 +85,43 @@ const MOCK_HOT_POSTS: Post[] = [
   },
 ];
 
+const MOCK_STORAGE_KEY = "campushub:mock:enrolled_subjects";
+
+function getMockEnrolledIds(): string[] {
+  try {
+    const raw = localStorage.getItem(MOCK_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+function setMockEnrolledIds(ids: string[]) {
+  try {
+    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(ids));
+  } catch {
+    // ignore
+  }
+}
+
 export const mockDashboardService: DashboardService = {
   async getEnrolledSubjects(): Promise<Result<Subject[]>> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    const ids = getMockEnrolledIds();
+    const enrolled = subjects.filter((s) => ids.includes(s.id));
     return {
-      data: [...subjects],
+      data: enrolled,
+      error: null,
+    };
+  },
+
+  async enrollSubjects(subjectIds: string[]): Promise<Result<Subject[]>> {
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    setMockEnrolledIds(subjectIds);
+    const enrolled = subjects.filter((s) => subjectIds.includes(s.id));
+    return {
+      data: enrolled,
       error: null,
     };
   },

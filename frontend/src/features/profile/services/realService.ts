@@ -98,12 +98,45 @@ export const realProfileService: ProfileService = {
   },
 
   async togglePrivacy(userId: string, isPrivate: boolean) {
+    // 1. Always update Supabase Auth user metadata
+    let authMetaSuccess = false;
+    try {
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          is_private: isPrivate,
+          privacy_onboarding_completed: true,
+        },
+      });
+      if (!authError) {
+        authMetaSuccess = true;
+      }
+    } catch (authErr) {
+      console.warn("Could not sync privacy to auth metadata:", authErr);
+    }
+
+    // 2. Try secure RPC function if available
+    const { error: rpcError } = await supabase.rpc("update_user_privacy", {
+      p_is_private: isPrivate,
+    });
+
+    if (!rpcError) {
+      return { data: undefined, error: null };
+    }
+
+    // 3. Fallback to direct table update on public.profiles
     const { error } = await supabase
       .from("profiles")
-      .update({ is_private: isPrivate })
+      .update({
+        is_private: isPrivate,
+        privacy_onboarding_completed: true,
+      })
       .eq("id", userId);
 
     if (error) {
+      console.warn("Direct profiles update failed:", error.message);
+      if (authMetaSuccess) {
+        return { data: undefined, error: null };
+      }
       return { data: null, error: { code: "INTERNAL", message: error.message } };
     }
 

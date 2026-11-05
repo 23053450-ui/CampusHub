@@ -30,7 +30,7 @@ function mapSessionToProfile(userObj: any): UserProfile {
     role: "student", // Strictly default fallback to student; privileged roles are resolved from public.profiles
     createdAt: userObj.created_at || new Date().toISOString(),
     isPrivate: false,
-    privacyOnboardingCompleted: true,
+    privacyOnboardingCompleted: false,
   };
 }
 

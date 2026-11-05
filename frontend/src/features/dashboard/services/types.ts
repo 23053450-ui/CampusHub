@@ -11,9 +11,14 @@ import type { Post } from "@/shared/communities";
 export interface DashboardService {
   /**
    * Fetches subjects enrolled by the active user.
-   * Falls back to general catalog subjects if user has no enrollments.
    */
   getEnrolledSubjects(): Promise<Result<Subject[]>>;
+
+  /**
+   * Updates the active user's enrolled subjects in user_subjects.
+   * Does NOT delete any personal notes, uploaded files, or study materials.
+   */
+  enrollSubjects(subjectIds: string[]): Promise<Result<Subject[]>>;
 
   /**
    * Fetches all available subjects in the curriculum.

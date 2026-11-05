@@ -5,3 +5,9 @@ export const dashboardRoute: RouteObject = {
   index: true,
   element: <DashboardPage />,
 };
+
+export const dashboardAliasRoute: RouteObject = {
+  path: "dashboard",
+  element: <DashboardPage />,
+};
+

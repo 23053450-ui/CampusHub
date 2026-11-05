@@ -15,8 +15,7 @@ export const realDashboardService: DashboardService = {
     try {
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) {
-        // Fallback to all subjects if no user session
-        return realDashboardService.getAllSubjects();
+        return { data: [], error: null };
       }
 
       const { data, error } = await supabase
@@ -31,9 +30,8 @@ export const realDashboardService: DashboardService = {
         };
       }
 
-      // If user hasn't enrolled in specific subjects, show default subject catalog
       if (!data || data.length === 0) {
-        return realDashboardService.getAllSubjects();
+        return { data: [], error: null };
       }
 
       const enrolled: Subject[] = data
@@ -46,6 +44,78 @@ export const realDashboardService: DashboardService = {
         }));
 
       return { data: enrolled, error: null };
+    } catch (err: unknown) {
+      return {
+        data: null,
+        error: { code: "NETWORK", message: (err as Error).message },
+      };
+    }
+  },
+
+  async enrollSubjects(subjectIds: string[]): Promise<Result<Subject[]>> {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        return {
+          data: null,
+          error: { code: "UNAUTHENTICATED", message: "User not authenticated" },
+        };
+      }
+
+      // 1. Fetch current enrollments
+      const { data: currentRows, error: fetchErr } = await supabase
+        .from("user_subjects")
+        .select("subject_id")
+        .eq("user_id", user.id);
+
+      if (fetchErr) {
+        return {
+          data: null,
+          error: { code: "INTERNAL", message: fetchErr.message },
+        };
+      }
+
+      const currentIds = new Set((currentRows || []).map((r: any) => r.subject_id));
+      const targetIds = new Set(subjectIds);
+
+      const toAdd = subjectIds.filter((id) => !currentIds.has(id));
+      const toRemove = Array.from(currentIds).filter((id) => !targetIds.has(id));
+
+      // 2. Remove unselected subjects (Safely leaves public.notes and files completely untouched)
+      if (toRemove.length > 0) {
+        const { error: deleteErr } = await supabase
+          .from("user_subjects")
+          .delete()
+          .eq("user_id", user.id)
+          .in("subject_id", toRemove);
+
+        if (deleteErr) {
+          return {
+            data: null,
+            error: { code: "INTERNAL", message: deleteErr.message },
+          };
+        }
+      }
+
+      // 3. Add newly selected subjects
+      if (toAdd.length > 0) {
+        const rowsToInsert = toAdd.map((id) => ({
+          user_id: user.id,
+          subject_id: id,
+        }));
+        const { error: insertErr } = await supabase
+          .from("user_subjects")
+          .insert(rowsToInsert);
+
+        if (insertErr) {
+          return {
+            data: null,
+            error: { code: "INTERNAL", message: insertErr.message },
+          };
+        }
+      }
+
+      return realDashboardService.getEnrolledSubjects();
     } catch (err: unknown) {
       return {
         data: null,

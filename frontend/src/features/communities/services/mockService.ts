@@ -661,10 +661,48 @@ let posts: Post[] = INITIAL_POSTS.map((p) => ({ ...p, authorName: p.authorName |
 let comments: Comment[] = INITIAL_COMMENTS.map((c) => ({ ...c, authorName: c.authorName || c.authorHandle || "Anonymous" }));
 let resources: ResourceNote[] = INITIAL_RESOURCES.map((r) => ({ ...r, uploaderName: r.uploaderName || r.uploaderHandle || "Anonymous" }));
 
+const MOCK_STORAGE_KEY = "campushub:mock:enrolled_subjects";
+
+function getMockEnrolledIds(): string[] {
+  try {
+    const raw = localStorage.getItem(MOCK_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 export const mockCommunitiesService: CommunitiesService = {
   async getSubjectForums(): Promise<Result<SubjectForum[]>> {
     await new Promise((resolve) => setTimeout(resolve, 150));
-    return { data: [...subjectForums], error: null };
+    const enrolledIds = getMockEnrolledIds();
+    const enrolled = subjectForums.filter((f) => {
+      const lowerId = f.id.toLowerCase();
+      const lowerCode = f.code.toLowerCase();
+      return (
+        enrolledIds.includes(lowerId) ||
+        enrolledIds.includes(lowerCode) ||
+        (lowerId === "cs301" && enrolledIds.includes("dbms")) ||
+        (lowerId === "cs302" && enrolledIds.includes("cn")) ||
+        (lowerId === "cs303" && enrolledIds.includes("os")) ||
+        (lowerId === "cs304" && enrolledIds.includes("dsa"))
+      );
+    });
+    return { data: enrolled, error: null };
+  },
+
+  async getSubjectForum(subjectId: string): Promise<Result<SubjectForum>> {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const found = subjectForums.find(
+      (f) =>
+        f.id.toLowerCase() === subjectId.toLowerCase() ||
+        f.code.toLowerCase() === subjectId.toLowerCase()
+    );
+    if (!found) {
+      return { data: null, error: { code: "NOT_FOUND", message: "Forum not found" } };
+    }
+    return { data: found, error: null };
   },
 
   async getPosts(subjectId: string, sort: "new" | "top" | "hot" = "new", search?: string): Promise<Result<Post[]>> {

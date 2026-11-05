@@ -1,12 +1,13 @@
 /**
  * @file LoginForm.tsx
  * @description Modern shadcn/ui login & registration form block supporting custom unique handles,
- *              real-time availability checks, clear inline error feedback, and offline fallback.
+ *              real-time availability checks, clear inline error feedback, dedicated email verification
+ *              screen, and offline fallback.
  * @owner Platform Core Team
  */
 
-import React, { useState, useEffect } from "react";
-import { Loader2, Check, AlertCircle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Loader2, Check, AlertCircle, Mail, RefreshCw, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,8 +18,9 @@ import type { UserProfile } from "@/shared/user";
 import { toast } from "sonner";
 
 interface LoginFormProps {
-  mode?: "signin" | "signup";
-  onModeChange?: (mode: "signin" | "signup") => void;
+  mode?: "signin" | "signup" | "verify";
+  onModeChange?: (mode: "signin" | "signup" | "verify", email?: string) => void;
+  initialEmail?: string;
   isMock: boolean;
   onSuccess: (profile: UserProfile) => void;
 }
@@ -26,35 +28,28 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({
   mode: controlledMode,
   onModeChange,
+  initialEmail,
   isMock,
   onSuccess,
 }) => {
-  const [internalMode, setInternalMode] = useState<"signin" | "signup">(controlledMode || "signin");
-
-  // Keep internal state aligned if parent passes down a new mode
-  useEffect(() => {
-    if (controlledMode) {
-      setInternalMode(controlledMode);
-    }
-  }, [controlledMode]);
-
-  const currentMode = controlledMode || internalMode;
-
-  const handleSetMode = (nextMode: "signin" | "signup") => {
-    setInternalMode(nextMode);
-    onModeChange?.(nextMode);
-    setHandleStatus({ available: null });
-    setErrorMessage(null);
-  };
+  const formRef = useRef<HTMLFormElement>(null);
+  const [internalMode, setInternalMode] = useState<"signin" | "signup" | "verify">(
+    controlledMode || "signin"
+  );
 
   // Sign-in identifier (accepts either username or email)
-  const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState(initialEmail || "");
 
   // Sign-up specific fields
   const [handle, setHandle] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail || "");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+
+  // Verification state
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string>(initialEmail || "");
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -63,6 +58,55 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     available: boolean | null;
     error?: string;
   }>({ available: null });
+
+  // Countdown timer for resending verification email
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  // Keep unconfirmedEmail updated if initialEmail changes
+  useEffect(() => {
+    if (initialEmail) {
+      setUnconfirmedEmail(initialEmail);
+      setEmail((prev) => prev || initialEmail);
+      setIdentifier((prev) => prev || initialEmail);
+    }
+  }, [initialEmail]);
+
+  const resetFormInputs = (keepEmail?: string) => {
+    setIdentifier(keepEmail || "");
+    setHandle("");
+    setEmail(keepEmail || "");
+    setFullName("");
+    setPassword("");
+    setHandleStatus({ available: null });
+    formRef.current?.reset();
+  };
+
+  // Keep internal state aligned if parent passes down a new mode
+  useEffect(() => {
+    if (controlledMode) {
+      setInternalMode(controlledMode);
+      if (controlledMode !== "verify") {
+        setErrorMessage(null);
+      }
+    }
+  }, [controlledMode]);
+
+  const currentMode = controlledMode || internalMode;
+
+  const handleSetMode = (nextMode: "signin" | "signup" | "verify", keepEmail?: string) => {
+    setInternalMode(nextMode);
+    onModeChange?.(nextMode);
+    if (nextMode !== "verify") {
+      resetFormInputs(keepEmail);
+    }
+    setErrorMessage(null);
+  };
 
   // Debounced handle for real-time validation & availability check
   const debouncedHandle = useDebounce(handle.trim(), 300);
@@ -103,29 +147,61 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     };
   }, [debouncedHandle, currentMode, isMock]);
 
+  const handleResendConfirmation = async () => {
+    const targetEmail = unconfirmedEmail.trim() || email.trim();
+    if (!targetEmail) {
+      toast.error("Please enter your campus email address to resend confirmation.");
+      return;
+    }
+    setIsResending(true);
+    const res = await authService.resendVerificationEmail(targetEmail, isMock);
+    setIsResending(false);
+
+    if (res.error) {
+      toast.error(res.error.message || "Failed to resend confirmation email.");
+    } else {
+      toast.success("Confirmation link resent! Check your inbox and spam folder.");
+      setResendCooldown(60);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
     if (currentMode === "signin") {
       const trimmedId = identifier.trim();
+      const currentPassword = password;
       if (!trimmedId) {
         setErrorMessage("Please enter your campus email or username.");
         return;
       }
-      if (!password) {
+      if (!currentPassword) {
         setErrorMessage("Please enter your password.");
         return;
       }
 
+      // Reset input fields immediately upon form submission
+      resetFormInputs();
+
       setIsLoading(true);
-      const res = await authService.login(trimmedId, password, isMock);
+      const res = await authService.login(trimmedId, currentPassword, isMock);
       setIsLoading(false);
 
       if (res.error) {
-        const message = res.error.message || "Invalid campus email, username, or password. Please try again.";
-        setErrorMessage(message);
-        toast.error(message);
+        const rawMessage = res.error.message || "Invalid campus email, username, or password. Please try again.";
+        const isEmailNotConfirmed = rawMessage.toLowerCase().includes("email not confirmed");
+
+        if (isEmailNotConfirmed) {
+          const detectedEmail = trimmedId.includes("@") ? trimmedId : unconfirmedEmail;
+          if (detectedEmail) {
+            setUnconfirmedEmail(detectedEmail);
+          }
+          setErrorMessage("Your campus email is not confirmed yet. Please verify your email before signing in.");
+        } else {
+          setErrorMessage(rawMessage);
+        }
+        toast.error(rawMessage);
         return;
       }
 
@@ -133,22 +209,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         toast.success(`Welcome back, ${res.data.fullName || res.data.handle}!`);
         onSuccess(res.data);
       }
-    } else {
+    } else if (currentMode === "signup") {
       // Sign-up validation
       const cleanHandle = handle.trim().toLowerCase();
+      const currentFullName = fullName.trim();
+      const currentEmail = email.trim();
+      const currentPassword = password;
+
       if (!cleanHandle) {
         setErrorMessage("Please choose a username.");
         return;
       }
-      if (!fullName.trim()) {
+      if (!currentFullName) {
         setErrorMessage("Please enter your full name.");
         return;
       }
-      if (!email.trim()) {
+      if (!currentEmail) {
         setErrorMessage("Please enter your campus email.");
         return;
       }
-      if (!password || password.length < 6) {
+      if (!currentPassword || currentPassword.length < 6) {
         setErrorMessage("Password must be at least 6 characters.");
         return;
       }
@@ -178,8 +258,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         }
       }
 
+      // Reset input fields immediately upon form submission
+      resetFormInputs();
+
       setIsLoading(true);
-      const res = await authService.signUp(email, password, fullName, cleanHandle, isMock);
+      const res = await authService.signUp(currentEmail, currentPassword, currentFullName, cleanHandle, isMock);
       setIsLoading(false);
 
       if (res.error) {
@@ -190,11 +273,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       if (res.data) {
         if (res.data.requiresVerification) {
-          toast.info("Account created! Please check your campus email inbox to verify your account, then sign in.", {
-            duration: 7000,
+          setUnconfirmedEmail(currentEmail);
+          handleSetMode("verify", currentEmail);
+          toast.info("Account created! Please check your campus email to verify your account.", {
+            duration: 8000,
           });
-          handleSetMode("signin");
-          setIdentifier(email);
         } else {
           toast.success(`Account @${res.data.handle} created successfully!`);
           onSuccess(res.data);
@@ -202,6 +285,101 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       }
     }
   };
+
+  // Dedicated View for Email Verification
+  if (currentMode === "verify") {
+    return (
+      <Card className="w-full shadow-sm border bg-card">
+        <CardHeader className="space-y-3 text-center pb-3">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+            <Mail className="h-7 w-7" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-semibold tracking-tight">
+              Confirm your email
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              {unconfirmedEmail ? (
+                <>
+                  We sent a confirmation link to <br />
+                  <span className="font-semibold text-foreground underline decoration-primary/40 underline-offset-2">
+                    {unconfirmedEmail}
+                  </span>
+                </>
+              ) : (
+                "We sent a confirmation link to your campus email address."
+              )}
+            </CardDescription>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4 pt-1">
+          <div className="rounded-lg border border-border/70 bg-muted/40 p-3.5 text-xs text-muted-foreground space-y-2">
+            <p className="font-semibold text-foreground flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+              What to do next:
+            </p>
+            <ul className="list-disc list-inside space-y-1 pl-1 text-[11px] leading-relaxed">
+              <li>Open your email inbox and click the verification link.</li>
+              <li>Please check your <strong>Spam / Junk</strong> folder if you don't see it.</li>
+              <li>Once confirmed, click the button below to sign in.</li>
+            </ul>
+          </div>
+
+          {!unconfirmedEmail && (
+            <div className="space-y-1.5">
+              <Label htmlFor="verify-email-input" className="text-xs">Campus Email</Label>
+              <Input
+                id="verify-email-input"
+                type="email"
+                placeholder="student@college.edu"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setUnconfirmedEmail(e.target.value);
+                }}
+              />
+            </div>
+          )}
+
+          <div className="space-y-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full text-xs font-medium cursor-pointer"
+              disabled={isResending || resendCooldown > 0}
+              onClick={handleResendConfirmation}
+            >
+              {isResending ? (
+                <>
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  Sending email...
+                </>
+              ) : resendCooldown > 0 ? (
+                `Resend link in ${resendCooldown}s`
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                  Resend confirmation email
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              className="w-full text-xs font-medium cursor-pointer"
+              onClick={() => {
+                handleSetMode("signin", unconfirmedEmail);
+              }}
+            >
+              <ArrowLeft className="mr-2 h-3.5 w-3.5" />
+              Back to sign in
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full shadow-sm border bg-card">
@@ -221,14 +399,34 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {errorMessage && (
           <div
             role="alert"
-            className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+            className="flex flex-col gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
           >
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
-            <span className="font-medium leading-snug">{errorMessage}</span>
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
+              <span className="font-medium leading-snug">{errorMessage}</span>
+            </div>
+            {errorMessage.toLowerCase().includes("not confirmed") && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-1 w-full text-xs font-semibold border-destructive/40 bg-background text-foreground hover:bg-muted cursor-pointer"
+                onClick={() => {
+                  const target = identifier.includes("@") ? identifier.trim() : unconfirmedEmail || email.trim();
+                  if (target) {
+                    setUnconfirmedEmail(target);
+                  }
+                  handleSetMode("verify", target);
+                }}
+              >
+                <Mail className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                Open Email Confirmation Screen
+              </Button>
+            )}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
           {currentMode === "signup" ? (
             <>
               {/* Unique Username / Handle Field */}

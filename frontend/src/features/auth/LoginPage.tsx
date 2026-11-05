@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { UserProfile } from "@/shared/user";
 
 interface LoginPageProps {
-  initialMode?: "signin" | "signup";
+  initialMode?: "signin" | "signup" | "verify";
 }
 
 export default function LoginPage({ initialMode }: LoginPageProps) {
@@ -22,14 +22,18 @@ export default function LoginPage({ initialMode }: LoginPageProps) {
 
   // Derive active mode directly from pathname, search params, or initial props
   const searchParams = new URLSearchParams(location.search);
-  const queryMode = searchParams.get("mode") as "signin" | "signup" | null;
+  const queryMode = searchParams.get("mode") as "signin" | "signup" | "verify" | null;
   const isSignupPath = location.pathname.includes("/signup");
-  const mode: "signin" | "signup" =
-    queryMode || (isSignupPath ? "signup" : (initialMode || "signin"));
+  const isVerifyPath = location.pathname.includes("/verify-email") || location.pathname.includes("/verify");
+  const mode: "signin" | "signup" | "verify" =
+    queryMode || (isVerifyPath ? "verify" : isSignupPath ? "signup" : (initialMode || "signin"));
+  const emailParam = searchParams.get("email") || "";
 
   const rawDestination = (location.state as any)?.from?.pathname || "/";
   const destination =
-    rawDestination === "/login" || rawDestination === "/signup" ? "/" : rawDestination;
+    rawDestination === "/login" || rawDestination === "/signup" || rawDestination === "/verify-email"
+      ? "/"
+      : rawDestination;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -43,9 +47,15 @@ export default function LoginPage({ initialMode }: LoginPageProps) {
     navigate(destination, { replace: true });
   };
 
-  const handleModeChange = (newMode: "signin" | "signup") => {
-    const targetPath = newMode === "signup" ? "/signup" : "/login";
-    if (location.pathname !== targetPath) {
+  const handleModeChange = (newMode: "signin" | "signup" | "verify", email?: string) => {
+    const search = email ? `?email=${encodeURIComponent(email)}` : "";
+    const targetPath =
+      newMode === "signup"
+        ? `/signup${search}`
+        : newMode === "verify"
+          ? `/verify-email${search}`
+          : `/login${search}`;
+    if (location.pathname + location.search !== targetPath) {
       navigate(targetPath, { replace: true });
     }
   };
@@ -66,10 +76,11 @@ export default function LoginPage({ initialMode }: LoginPageProps) {
           </p>
         </div>
 
-        {/* shadcn Login / Register Block with Tabs */}
+        {/* shadcn Login / Register / Verify Block */}
         <LoginForm
           mode={mode}
           onModeChange={handleModeChange}
+          initialEmail={emailParam}
           isMock={isMock}
           onSuccess={handleSuccess}
         />

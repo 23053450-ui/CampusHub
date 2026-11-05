@@ -184,13 +184,8 @@ export const authService = {
             error: { code: "UNAUTHENTICATED", message: "Invalid email or password." },
           };
         }
-        sessionStorage.removeItem("campushub:just_registered");
-        const profile: UserProfile = {
-          ...registeredMatch.profile,
-          privacyOnboardingCompleted: true,
-        };
-        localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(profile));
-        return { data: profile, error: null };
+        localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(registeredMatch.profile));
+        return { data: registeredMatch.profile, error: null };
       }
 
       return {
@@ -227,21 +222,9 @@ export const authService = {
         };
       }
 
-      sessionStorage.removeItem("campushub:just_registered");
       const profile = await this.getLiveProfile(data.user.id);
       if (profile) {
-        const existingProfile: UserProfile = {
-          ...profile,
-          privacyOnboardingCompleted: true,
-        };
-        if (!profile.privacyOnboardingCompleted) {
-          supabase
-            .from("profiles")
-            .update({ privacy_onboarding_completed: true })
-            .eq("id", data.user.id)
-            .then();
-        }
-        return { data: existingProfile, error: null };
+        return { data: profile, error: null };
       }
 
       // Fallback profile if row is still synchronizing
@@ -254,7 +237,7 @@ export const authService = {
           role: "student",
           createdAt: data.user.created_at,
           isPrivate: false,
-          privacyOnboardingCompleted: true,
+          privacyOnboardingCompleted: false,
         },
         error: null,
       };
@@ -392,6 +375,47 @@ export const authService = {
   },
 
   /**
+   * Resend email confirmation link for registration verification.
+   */
+  async resendVerificationEmail(email: string, isMock: boolean): Promise<Result<boolean>> {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      return {
+        data: null,
+        error: { code: "VALIDATION", message: "Email is required to resend confirmation." },
+      };
+    }
+
+    if (isMock) {
+      return { data: true, error: null };
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        return {
+          data: null,
+          error: { code: "INTERNAL", message: error.message || "Failed to resend confirmation email." },
+        };
+      }
+
+      return { data: true, error: null };
+    } catch (err: unknown) {
+      return {
+        data: null,
+        error: { code: "NETWORK", message: (err as Error).message || "Network error while resending confirmation." },
+      };
+    }
+  },
+
+  /**
    * Auto-login helper based on VITE_MOCK_ROLE.
    */
   getAutoMockUser(mockRoleEnv?: string): UserProfile | null {
@@ -497,6 +521,10 @@ export const authService = {
     const { data: authData } = await supabase.auth.getUser();
     const email = authData.user?.id === userId ? authData.user.email : undefined;
 
+    // Resolve active user metadata as fallback if DB column grants haven't been applied yet
+    const { data: authUser } = await supabase.auth.getUser();
+    const meta = authUser?.user?.id === userId ? authUser.user.user_metadata : null;
+
     return {
       id: data.id,
       handle: data.handle,
@@ -506,8 +534,8 @@ export const authService = {
       createdAt: data.created_at,
       moderatedSubjectIds,
       email,
-      isPrivate: data.is_private ?? false,
-      privacyOnboardingCompleted: data.privacy_onboarding_completed ?? true,
+      isPrivate: data.is_private ?? meta?.is_private ?? false,
+      privacyOnboardingCompleted: data.privacy_onboarding_completed ?? meta?.privacy_onboarding_completed ?? false,
     };
   },
 
@@ -549,6 +577,32 @@ export const authService = {
     }
 
     try {
+      // 1. Always update Supabase Auth user metadata so session & preferences are saved
+      let authMetaSuccess = false;
+      try {
+        const { error: authError } = await supabase.auth.updateUser({
+          data: {
+            is_private: isPrivate,
+            privacy_onboarding_completed: true,
+          },
+        });
+        if (!authError) {
+          authMetaSuccess = true;
+        }
+      } catch (authErr) {
+        console.warn("Could not sync privacy to auth metadata:", authErr);
+      }
+
+      // 2. Try secure RPC function first
+      const { error: rpcError } = await supabase.rpc("update_user_privacy", {
+        p_is_private: isPrivate,
+      });
+
+      if (!rpcError) {
+        return { data: undefined, error: null };
+      }
+
+      // 3. Fallback to direct table update on public.profiles
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -558,6 +612,11 @@ export const authService = {
         .eq("id", userId);
 
       if (error) {
+        console.warn("Direct profiles update failed:", error.message);
+        // If Auth metadata succeeded, preferences are saved without blocking the user
+        if (authMetaSuccess) {
+          return { data: undefined, error: null };
+        }
         return { data: null, error: { code: "INTERNAL", message: error.message } };
       }
 

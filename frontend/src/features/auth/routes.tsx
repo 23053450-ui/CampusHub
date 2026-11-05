@@ -18,6 +18,10 @@ export const authRoutes: RouteObject[] = [
     element: <LoginPage initialMode="signup" />,
   },
   {
+    path: "/verify-email",
+    element: <LoginPage initialMode="verify" />,
+  },
+  {
     path: "/auth/callback",
     element: <AuthCallbackPage />,
   },

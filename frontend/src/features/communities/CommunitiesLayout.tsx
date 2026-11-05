@@ -1,10 +1,10 @@
 /**
  * @file CommunitiesLayout.tsx
- * @description Layout shell providing persistent SubjectForumsSidebar across all community views.
+ * @description Layout shell providing persistent SubjectForumsSidebar across all community views with pinning support.
  * @owner Communities Team
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { HeaderActions, HeaderCenter } from "@/lib/header-context";
@@ -14,50 +14,187 @@ import { GlobalSearchBar } from "./components/GlobalSearchBar";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { communitiesService } from "./services";
 import { useAuth } from "@/lib/auth-context";
+import { useUserSubjects } from "@/lib/user-subjects-context";
 import type { SubjectForum } from "./services/types";
 
 export interface CommunitiesContextType {
   forums: SubjectForum[];
   activeForum: SubjectForum | null;
   isSidebarOpen: boolean;
+  isPinned: boolean;
+  isEnrolled: boolean;
+  onTogglePin: (subjectId: string) => void;
 }
 
 export default function CommunitiesLayout() {
   const { subjectId } = useParams<{ subjectId?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { allSubjects } = useUserSubjects();
 
   const [isSidebarOpen, setIsSidebarOpen] = usePersistentToggle("campushub:sidebar:communities", true);
-  const [forums, setForums] = useState<SubjectForum[]>([]);
+  const [enrolledForums, setEnrolledForums] = useState<SubjectForum[]>([]);
+  const [pinnedForumsData, setPinnedForumsData] = useState<SubjectForum[]>([]);
   const [activeForum, setActiveForum] = useState<SubjectForum | null>(null);
+
+  // Persistent storage key for pinned forums per user
+  const pinStorageKey = `campushub:pinned_forums:${user?.id || "guest"}`;
+
+  const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(pinStorageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const savePinnedIds = (ids: string[]) => {
+    setPinnedIds(ids);
+    try {
+      localStorage.setItem(pinStorageKey, JSON.stringify(ids));
+    } catch {
+      // ignore
+    }
+  };
 
   const isStaff = Boolean(
     user?.role === "admin" ||
       (user?.moderatedSubjectIds && user.moderatedSubjectIds.length > 0)
   );
 
+  // 1. Fetch Enrolled Forums
   useEffect(() => {
     let isMounted = true;
     communitiesService.getSubjectForums().then((res) => {
       if (isMounted && res.data) {
-        setForums(res.data);
-        const selected =
-          res.data.find((f) => f.id === subjectId) || res.data[0] || null;
-        setActiveForum(selected);
+        setEnrolledForums(res.data);
       }
     });
     return () => {
       isMounted = false;
     };
-  }, [subjectId]);
+  }, []);
+
+  // 2. Compute Active Pinned IDs: Exclude any subject that is currently in enrolledForums
+  const enrolledIds = useMemo(
+    () => new Set(enrolledForums.map((f) => f.id.toLowerCase())),
+    [enrolledForums]
+  );
+
+  // If a pinned subject is enrolled, it is automatically omitted from the pinned area!
+  const activePinnedIds = useMemo(
+    () => pinnedIds.filter((id) => !enrolledIds.has(id.toLowerCase())),
+    [pinnedIds, enrolledIds]
+  );
+
+  // 3. Load forum details for pinned forums
+  useEffect(() => {
+    let isMounted = true;
+    if (activePinnedIds.length === 0) {
+      setPinnedForumsData([]);
+      return;
+    }
+
+    Promise.all(
+      activePinnedIds.map(async (id) => {
+        const res = await communitiesService.getSubjectForum(id);
+        if (res.data) {
+          return { ...res.data, isPinned: true };
+        }
+        // Fallback to allSubjects catalog
+        const match = allSubjects.find((s) => s.id.toLowerCase() === id.toLowerCase());
+        return {
+          id,
+          name: match?.name || id.toUpperCase(),
+          code: match?.code || id.toUpperCase(),
+          memberCount: 1,
+          isPinned: true,
+        };
+      })
+    ).then((loaded) => {
+      if (isMounted) {
+        setPinnedForumsData(loaded);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activePinnedIds, allSubjects]);
+
+  // Combined forums for context consumption
+  const allForums = useMemo(
+    () => [...enrolledForums, ...pinnedForumsData],
+    [enrolledForums, pinnedForumsData]
+  );
+
+  // 4. Resolve Active Forum
+  useEffect(() => {
+    let isMounted = true;
+
+    async function resolveActive() {
+      if (subjectId) {
+        let found = allForums.find((f) => f.id === subjectId);
+        if (!found) {
+          const res = await communitiesService.getSubjectForum(subjectId);
+          if (isMounted && res.data) {
+            found = res.data;
+          }
+        }
+        if (isMounted) {
+          setActiveForum(found || null);
+        }
+      } else {
+        // Default to first enrolled forum, or first pinned forum
+        if (isMounted) {
+          setActiveForum(allForums[0] || null);
+        }
+      }
+    }
+
+    void resolveActive();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [subjectId, allForums]);
 
   const handleSelectSubject = (id: string) => {
     navigate(`/communities/${id}`);
-    const selected = forums.find((f) => f.id === id);
+    const selected = allForums.find((f) => f.id === id);
     if (selected) {
       setActiveForum(selected);
     }
   };
+
+  const handlePinSubject = (id: string) => {
+    const lowerId = id.toLowerCase();
+    if (!pinnedIds.includes(lowerId)) {
+      savePinnedIds([...pinnedIds, lowerId]);
+    }
+  };
+
+  const handleUnpinSubject = (id: string) => {
+    const lowerId = id.toLowerCase();
+    savePinnedIds(pinnedIds.filter((item) => item.toLowerCase() !== lowerId));
+  };
+
+  const handleTogglePin = (id: string) => {
+    const lowerId = id.toLowerCase();
+    if (activePinnedIds.includes(lowerId)) {
+      handleUnpinSubject(lowerId);
+    } else {
+      handlePinSubject(lowerId);
+    }
+  };
+
+  const isActiveEnrolled = Boolean(
+    activeForum && enrolledIds.has(activeForum.id.toLowerCase())
+  );
+  const isActivePinned = Boolean(
+    activeForum && activePinnedIds.includes(activeForum.id.toLowerCase())
+  );
 
   return (
     <div className="flex h-[calc(100vh-5.5rem)] -m-4 md:-m-6 lg:-m-8 overflow-hidden bg-background relative">
@@ -92,18 +229,28 @@ export default function CommunitiesLayout() {
 
       {/* Persistent Subject Forums Sidebar */}
       <SubjectForumsSidebar
-        forums={forums}
+        enrolledForums={enrolledForums}
+        pinnedForums={pinnedForumsData}
         activeSubjectId={activeForum?.id || ""}
         onSelectSubject={handleSelectSubject}
+        onUnpinSubject={handleUnpinSubject}
         isOpen={isSidebarOpen}
         onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
       />
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto min-w-0">
-        <Outlet context={{ forums, activeForum, isSidebarOpen }} />
+        <Outlet
+          context={{
+            forums: allForums,
+            activeForum,
+            isSidebarOpen,
+            isPinned: isActivePinned,
+            isEnrolled: isActiveEnrolled,
+            onTogglePin: handleTogglePin,
+          }}
+        />
       </div>
     </div>
   );
 }
-

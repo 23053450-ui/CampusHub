@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowBigDown, ArrowBigUp, ArrowRight, BookOpen, MessageSquare } from "lucide-react";
+import {
+  ArrowBigDown,
+  ArrowBigUp,
+  ArrowRight,
+  BookOpen,
+  MessageSquare,
+  Plus,
+  SlidersHorizontal,
+} from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,23 +19,9 @@ import {
 } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { useAuth } from "@/lib/auth-context";
-import type { Subject } from "@/shared/user";
+import { useUserSubjects } from "@/lib/user-subjects-context";
 import type { Post } from "@/shared/communities";
 import { dashboardService } from "./services";
-
-const subjectStatusMap: Record<string, string> = {
-  cs301: "2 upcoming tasks",
-  cs302: "Lab on Thursday",
-  cs303: "Midterm in 5 days",
-  cs304: "All tasks submitted",
-};
-
-const subjectBadgeTheme: Record<string, string> = {
-  cs301: "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-300",
-  cs302: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-300",
-  cs303: "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800/60 dark:bg-purple-950/40 dark:text-purple-300",
-  cs304: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300",
-};
 
 function formatRelativeTime(dateString: string): string {
   try {
@@ -48,47 +42,38 @@ function formatRelativeTime(dateString: string): string {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const today = new Date();
+  const {
+    enrolledSubjects,
+    isLoading: loadingSubjects,
+    openModal: openSubjectModal,
+  } = useUserSubjects();
 
+  const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(today);
   const [calendarMonth, setCalendarMonth] = useState<Date>(today);
-  const [enrolledSubjects, setEnrolledSubjects] = useState<Subject[]>([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [hotPosts, setHotPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadDashboardData() {
+    async function loadDiscussions() {
       try {
-        setLoadingSubjects(true);
         setLoadingPosts(true);
-
-        const [subjectsRes, postsRes] = await Promise.all([
-          dashboardService.getEnrolledSubjects(),
-          dashboardService.getHotDiscussions(5),
-        ]);
-
-        if (isMounted) {
-          if (subjectsRes.data) {
-            setEnrolledSubjects(subjectsRes.data);
-          }
-          if (postsRes.data) {
-            setHotPosts(postsRes.data);
-          }
+        const postsRes = await dashboardService.getHotDiscussions(5);
+        if (isMounted && postsRes.data) {
+          setHotPosts(postsRes.data);
         }
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
+        console.error("Failed to load hot discussions:", err);
       } finally {
         if (isMounted) {
-          setLoadingSubjects(false);
           setLoadingPosts(false);
         }
       }
     }
 
-    void loadDashboardData();
+    void loadDiscussions();
 
     return () => {
       isMounted = false;
@@ -111,8 +96,8 @@ export default function DashboardPage() {
         {/* Subjects & Calendar Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px]">
           {/* My Subjects */}
-          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-4">
+          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden min-h-[340px]">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-3.5">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <BookOpen className="h-4 w-4" />
@@ -124,49 +109,66 @@ export default function DashboardPage() {
                   {enrolledSubjects.length} enrolled
                 </span>
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openSubjectModal}
+                className="h-8 gap-1.5 text-xs cursor-pointer"
+                title="Add or remove enrolled subjects"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>Manage Subjects</span>
+              </Button>
             </CardHeader>
 
-            <CardContent className="flex-1 p-4 sm:p-5">
+            <CardContent className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
               {loadingSubjects ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
+                <div className="py-12 text-center text-sm text-muted-foreground">
                   Loading enrolled subjects...
                 </div>
               ) : enrolledSubjects.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  No enrolled subjects found.
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    No subjects enrolled yet
+                  </h3>
+                  <p className="mt-1 max-w-sm text-xs text-muted-foreground leading-relaxed">
+                    Select the courses you are attending this semester to access your study notes, communities, and subject tools.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={openSubjectModal}
+                    className="mt-4 gap-1.5 cursor-pointer text-xs"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Select Subjects
+                  </Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                   {enrolledSubjects.map((subject) => {
-                    const badgeClass =
-                      subjectBadgeTheme[subject.id.toLowerCase()] ||
-                      "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-300";
-                    const statusText =
-                      subjectStatusMap[subject.id.toLowerCase()] ||
-                      "Active enrollment";
-
                     return (
                       <Link
                         key={subject.id}
                         to={`/subjects/${subject.id}`}
-                        className="group flex flex-col justify-between rounded-xl border border-border/80 bg-card p-4 transition-all hover:border-primary/50 hover:bg-muted/30 hover:shadow-xs min-h-[110px]"
+                        className="group flex flex-col justify-between rounded-xl border border-border/80 bg-card p-4 transition-all hover:border-primary/50 hover:bg-muted/30 hover:shadow-xs min-h-[96px]"
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <span
-                            className={`rounded-md border px-2 py-0.5 font-mono text-xs font-semibold tracking-wide ${badgeClass}`}
-                          >
+                          <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 font-mono text-xs font-semibold text-foreground group-hover:border-primary/40 transition-colors">
                             {subject.code}
                           </span>
                           <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                         </div>
 
-                        <div className="space-y-1 pt-3">
+                        <div className="pt-3">
                           <h2 className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary line-clamp-1">
                             {subject.name}
                           </h2>
-                          <p className="text-xs text-muted-foreground">
-                            {statusText}
-                          </p>
                         </div>
                       </Link>
                     );
@@ -176,8 +178,8 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Calendar */}
-          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden">
+          {/* Calendar - self-start h-fit ensures it aligns with short subject cards and never stretches into empty void */}
+          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden self-start h-fit">
             <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-4">
               <CardTitle className="text-base font-semibold text-foreground">
                 Calendar

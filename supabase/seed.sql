@@ -3,11 +3,11 @@
 -- Description: Initial authorized campus email domains and academic subjects catalogue
 -- =============================================================================
 
--- 1. Authorized Campus Email Domains
-INSERT INTO public.allowed_email_domains (domain)
-VALUES
-  ('yourcampus.edu') -- REPLACE WITH REAL CAMPUS DOMAIN
-ON CONFLICT (domain) DO NOTHING;
+-- -- 1. Authorized Campus Email Domains
+-- INSERT INTO public.allowed_email_domains (domain)
+-- VALUES
+--   ('yourcampus.edu') -- REPLACE WITH REAL CAMPUS DOMAIN
+-- ON CONFLICT (domain) DO NOTHING;
 
 -- 2. Academic Subjects Catalogue
 INSERT INTO public.subjects (id, name, code)

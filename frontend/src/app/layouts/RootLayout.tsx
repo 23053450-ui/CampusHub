@@ -21,6 +21,7 @@ import {
   ShieldAlert,
   Mail,
   User,
+  Plus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -34,15 +35,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { subjects } from "@/shared/subjects";
+import { getSubjectById } from "@/shared/subjects";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
 import { ImageViewerProvider } from "@/lib/image-viewer-context";
+import { UserSubjectsProvider, useUserSubjects } from "@/lib/user-subjects-context";
 import { useResizable } from "@/lib/use-resizable";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
 import { ResizeHandle } from "@/components/ui/resize-handle";
 import { useAuth } from "@/lib/auth-context";
 import { AvatarUploadDialog } from "@/features/auth/components/AvatarUploadDialog";
 import { PrivacyOnboardingModal } from "@/features/auth/components/PrivacyOnboardingModal";
+import { SubjectEnrollmentDialog } from "@/components/subjects/SubjectEnrollmentDialog";
 
 function getInitials(name?: string | null): string {
   if (name) {
@@ -64,7 +67,7 @@ const studentTools = [
 ];
 
 function getPageTitle(pathname: string): string {
-  if (pathname === "/") return "Dashboard";
+  if (pathname === "/" || pathname === "/dashboard") return "Dashboard";
 
   if (pathname.startsWith("/communities")) {
     return "Communities";
@@ -78,7 +81,7 @@ function getPageTitle(pathname: string): string {
     const parts = pathname.split("/").filter(Boolean);
 
     if (parts.length > 1) {
-      const subject = subjects.find((s) => s.id === parts[1]);
+      const subject = getSubjectById(parts[1]);
 
       if (subject) {
         return subject.name;
@@ -99,6 +102,7 @@ function RootLayoutContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { enrolledSubjects, openModal: openSubjectModal } = useUserSubjects();
   const displayEmail =
     user?.email ||
     (user?.handle === "morgan_t"
@@ -294,55 +298,96 @@ function RootLayoutContent() {
 
               {/* My Subjects */}
               <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsSubjectsOpen((previous) => !previous)}
-                  className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    isSubjectsActive
-                      ? "font-semibold text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                  aria-expanded={isSubjectsOpen}
-                >
-                  <div className="flex items-center gap-3">
-                    <BookOpen className="h-4 w-4 shrink-0" />
-                    <span>My Subjects</span>
-                  </div>
+                <div className="flex items-center justify-between group/subjects pr-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsSubjectsOpen((previous) => !previous)}
+                    className={`flex flex-1 cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      isSubjectsActive
+                        ? "font-semibold text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                    aria-expanded={isSubjectsOpen}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BookOpen className="h-4 w-4 shrink-0" />
+                      <span>My Subjects</span>
+                    </div>
 
-                  {isSubjectsOpen ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
-                </button>
+                    {isSubjectsOpen ? (
+                      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openSubjectModal();
+                    }}
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                    title="Manage enrolled subjects"
+                    aria-label="Manage enrolled subjects"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
 
                 {isSubjectsOpen && (
                   <div className="ml-4 mt-1 space-y-1 border-l pl-2">
-                    {subjects.map((subject) => {
-                      const isActive =
-                        location.pathname === `/subjects/${subject.id}`;
-
-                      return (
-                        <NavLink
-                          key={subject.id}
-                          to={`/subjects/${subject.id}`}
-                          onClick={closeSidebarOnMobile}
-                          className={`flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm transition-colors ${
-                            isActive
-                              ? "bg-primary/10 font-semibold text-primary"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}
+                    {enrolledSubjects.length === 0 ? (
+                      <div className="py-2 px-2 text-xs text-muted-foreground space-y-1.5">
+                        <p>No subjects enrolled</p>
+                        <button
+                          type="button"
+                          onClick={openSubjectModal}
+                          className="inline-flex items-center gap-1 text-primary hover:underline font-medium cursor-pointer"
                         >
-                          <span className="truncate pr-1.5">
-                            {subject.name}
-                          </span>
+                          <Plus className="h-3 w-3" /> Add subjects
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {enrolledSubjects.map((subject) => {
+                          const isActive =
+                            location.pathname === `/subjects/${subject.id}`;
 
-                          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                            {subject.code}
-                          </span>
-                        </NavLink>
-                      );
-                    })}
+                          return (
+                            <NavLink
+                              key={subject.id}
+                              to={`/subjects/${subject.id}`}
+                              onClick={closeSidebarOnMobile}
+                              className={`flex items-center justify-between rounded-md px-2.5 py-1.5 text-sm transition-colors ${
+                                isActive
+                                  ? "bg-primary/10 font-semibold text-primary"
+                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                            >
+                              <span className="truncate pr-1.5">
+                                {subject.name}
+                              </span>
+
+                              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                                {subject.code}
+                              </span>
+                            </NavLink>
+                          );
+                        })}
+
+                        <div className="pt-1 px-1">
+                          <button
+                            type="button"
+                            onClick={openSubjectModal}
+                            className="flex w-full items-center gap-1.5 py-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          >
+                            <Plus className="h-3 w-3" />
+                            <span>Manage subjects</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -530,7 +575,7 @@ function RootLayoutContent() {
                       </span>
                       <div className="flex flex-wrap items-center gap-1 justify-end">
                         {Array.from(new Set(user.moderatedSubjectIds)).map((id) => {
-                          const sub = subjects.find((s) => s.id.toLowerCase() === id.toLowerCase());
+                          const sub = getSubjectById(id);
                           return (
                             <span
                               key={id}
@@ -658,6 +703,9 @@ function RootLayoutContent() {
 
         {/* First-Time Privacy Onboarding Modal */}
         <PrivacyOnboardingModal />
+
+        {/* Global Subject Enrollment / Management Dialog */}
+        <SubjectEnrollmentDialog />
       </div>
     </div>
   );
@@ -667,7 +715,9 @@ export default function RootLayout() {
   return (
     <HeaderProvider>
       <ImageViewerProvider>
-        <RootLayoutContent />
+        <UserSubjectsProvider>
+          <RootLayoutContent />
+        </UserSubjectsProvider>
       </ImageViewerProvider>
     </HeaderProvider>
   );
