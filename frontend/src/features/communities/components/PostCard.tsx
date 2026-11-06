@@ -257,11 +257,12 @@ export function PostCard({ post, onVote, highlightQuery, onDeletePost }: PostCar
 
       {/* Image Carousel (Renders above body text if images exist) */}
       {postImages.length > 0 && (
-        <div className="pt-0.5">
+        <div className="pt-0.5 flex justify-center">
           <ImageCarousel
             images={postImages}
             title={post.title}
-            aspectClass="max-h-[380px] min-h-[200px]"
+            aspectClass="max-h-[220px] sm:max-h-[240px] min-h-[130px]"
+            className="w-full max-w-2xl"
           />
         </div>
       )}

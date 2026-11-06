@@ -191,8 +191,9 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
   const renderedBlocks: React.ReactNode[] = [];
   let inCodeBlock = false;
   let codeBlockBuffer: string[] = [];
+  let i = 0;
 
-  for (let i = 0; i < lines.length; i++) {
+  while (i < lines.length) {
     const line = lines[i];
 
     // Check code fence ```
@@ -211,11 +212,13 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
       } else {
         inCodeBlock = true;
       }
+      i++;
       continue;
     }
 
     if (inCodeBlock) {
       codeBlockBuffer.push(line);
+      i++;
       continue;
     }
 
@@ -226,6 +229,7 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
           {parseInline(line.replace("### ", ""))}
         </h4>
       );
+      i++;
       continue;
     }
     if (line.startsWith("## ")) {
@@ -234,6 +238,7 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
           {parseInline(line.replace("## ", ""))}
         </h3>
       );
+      i++;
       continue;
     }
     if (line.startsWith("# ")) {
@@ -242,39 +247,74 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
           {parseInline(line.replace("# ", ""))}
         </h2>
       );
+      i++;
       continue;
     }
 
-    // Blockquote
-    if (line.startsWith("> ")) {
+    // Blockquote (group contiguous quote lines)
+    if (line.startsWith("> ") || line === ">") {
+      const quoteLines: React.ReactNode[] = [];
+      const quoteKey = `bq-${i}`;
+      while (i < lines.length && (lines[i].startsWith("> ") || lines[i] === ">")) {
+        quoteLines.push(
+          <p key={`bql-${i}`} className="leading-relaxed">
+            {parseInline(lines[i].replace(/^>\s?/, ""))}
+          </p>
+        );
+        i++;
+      }
       renderedBlocks.push(
         <blockquote
-          key={`bq-${i}`}
-          className="border-l-2 border-primary/60 pl-3 py-0.5 my-1 text-muted-foreground italic text-xs sm:text-sm bg-muted/20 rounded-r"
+          key={quoteKey}
+          className="border-l-2 border-primary/60 pl-3 py-1 my-1 text-muted-foreground italic text-xs sm:text-sm bg-muted/20 rounded-r space-y-0.5"
         >
-          {parseInline(line.replace(/^>\s*/, ""))}
+          {quoteLines}
         </blockquote>
       );
       continue;
     }
 
-    // Bullet List
-    if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
+    // Bullet List (group contiguous unordered list items in a <ul>)
+    if (/^\s*[-*+]\s+/.test(line)) {
+      const listItems: React.ReactNode[] = [];
+      const listKey = `ul-${i}`;
+      while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+        const itemText = lines[i].replace(/^\s*[-*+]\s+/, "");
+        listItems.push(
+          <li key={`uli-${i}`} className="my-0.5 leading-relaxed">
+            {parseInline(itemText)}
+          </li>
+        );
+        i++;
+      }
       renderedBlocks.push(
-        <li key={`li-${i}`} className="ml-4 list-disc text-xs sm:text-sm text-foreground my-0.5">
-          {parseInline(line.trim().replace(/^[-*]\s+/, ""))}
-        </li>
+        <ul key={listKey} className="ml-5 list-disc text-xs sm:text-sm text-foreground my-1 space-y-0.5">
+          {listItems}
+        </ul>
       );
       continue;
     }
 
-    // Numbered list
-    const numMatch = line.trim().match(/^(\d+)\.\s+(.*)/);
-    if (numMatch) {
+    // Numbered List (group contiguous ordered list items in an <ol>)
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const listItems: React.ReactNode[] = [];
+      const listKey = `ol-${i}`;
+      const firstMatch = lines[i].match(/^\s*(\d+)\.\s+/);
+      const startNum = firstMatch ? parseInt(firstMatch[1], 10) : 1;
+
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        const itemText = lines[i].replace(/^\s*\d+\.\s+/, "");
+        listItems.push(
+          <li key={`oli-${i}`} className="my-0.5 leading-relaxed">
+            {parseInline(itemText)}
+          </li>
+        );
+        i++;
+      }
       renderedBlocks.push(
-        <li key={`nli-${i}`} className="ml-4 list-decimal text-xs sm:text-sm text-foreground my-0.5">
-          {parseInline(numMatch[2])}
-        </li>
+        <ol key={listKey} start={startNum} className="ml-5 list-decimal text-xs sm:text-sm text-foreground my-1 space-y-0.5">
+          {listItems}
+        </ol>
       );
       continue;
     }
@@ -282,6 +322,7 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
     // Empty line
     if (!line.trim()) {
       renderedBlocks.push(<div key={`sp-${i}`} className="h-2" />);
+      i++;
       continue;
     }
 
@@ -290,6 +331,19 @@ export function FormattedText({ content, className = "" }: FormattedTextProps) {
       <p key={`p-${i}`} className="text-xs sm:text-sm text-foreground leading-relaxed">
         {parseInline(line)}
       </p>
+    );
+    i++;
+  }
+
+  // Handle unclosed code block at EOF gracefully
+  if (inCodeBlock && codeBlockBuffer.length > 0) {
+    renderedBlocks.push(
+      <pre
+        key="cb-unclosed"
+        className="my-2 overflow-x-auto rounded-lg bg-muted/80 p-3 font-mono text-xs text-foreground border"
+      >
+        <code>{codeBlockBuffer.join("\n")}</code>
+      </pre>
     );
   }
 

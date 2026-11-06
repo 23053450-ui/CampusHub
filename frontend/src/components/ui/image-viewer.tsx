@@ -14,6 +14,7 @@ import {
   ZoomOut,
   RotateCcw,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 
 export interface ImageViewerModalProps {
@@ -38,6 +39,7 @@ export function ImageViewerModal({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isWheeling, setIsWheeling] = useState(false);
+  const [loadedMap, setLoadedMap] = useState<Record<string, boolean>>({});
   const scaleRef = useRef(scale);
   scaleRef.current = scale;
   const panRef = useRef(pan);
@@ -47,6 +49,21 @@ export function ImageViewerModal({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const initialPanRef = useRef({ x: 0, y: 0 });
   const didDragRef = useRef(false);
+
+  // Background preload all images in the viewer
+  useEffect(() => {
+    if (!isOpen || !images || images.length === 0) return;
+    images.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        setLoadedMap((prev) => ({ ...prev, [src]: true }));
+      };
+      img.onerror = () => {
+        setLoadedMap((prev) => ({ ...prev, [src]: true }));
+      };
+    });
+  }, [isOpen, images]);
 
   // Reset zoom & pan when image changes or viewer opens
   const resetTransform = useCallback(() => {
@@ -341,12 +358,20 @@ export function ImageViewerModal({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
       >
+        {/* Loading Spinner */}
+        {!loadedMap[currentImage] && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none z-10 text-white/60">
+            <Loader2 className="h-8 w-8 animate-spin text-white/80" />
+            <span className="text-xs font-medium tracking-wide">Loading image...</span>
+          </div>
+        )}
+
         <img
           src={currentImage}
           alt={title || `View ${currentIndex + 1} of ${total}`}
           style={{
             transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${scale})`,
-            transition: isDragging || isWheeling ? "none" : "transform 150ms ease-out",
+            transition: isDragging || isWheeling ? "none" : "transform 150ms ease-out, opacity 200ms ease-out",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -354,7 +379,15 @@ export function ImageViewerModal({
               handleToggleZoom();
             }
           }}
-          className="max-h-[90vh] max-w-[94vw] object-contain select-none pointer-events-auto rounded-sm shadow-2xl touch-none"
+          onLoad={() => {
+            setLoadedMap((prev) => ({ ...prev, [currentImage]: true }));
+          }}
+          onError={() => {
+            setLoadedMap((prev) => ({ ...prev, [currentImage]: true }));
+          }}
+          className={`max-h-[90vh] max-w-[94vw] object-contain select-none pointer-events-auto rounded-sm shadow-2xl touch-none transition-opacity duration-200 ${
+            loadedMap[currentImage] ? "opacity-100" : "opacity-0"
+          }`}
           draggable={false}
         />
 

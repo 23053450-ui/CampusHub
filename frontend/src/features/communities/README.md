@@ -26,17 +26,25 @@ frontend/src/features/communities/
 ├── routes.tsx                   # Route definitions including role-guarded /moderation
 ├── components/                  # Sub-components isolated to communities
 │   ├── PostFeed.tsx             # Scrollable list of discussion threads with sort/filter controls
-│   ├── PostCard.tsx             # Thread preview: author, subject tag, upvotes/downvotes, reply count
-│   ├── ThreadComments.tsx       # Comment list and reply input box
-│   ├── CommentTree.tsx          # Recursive nested comment renderer
+│   ├── PostCard.tsx             # Thread preview with compact image carousel, author, and voting
 │   ├── PostComposer.tsx         # Modal/form to draft a new post with image upload
+│   ├── CommentTree.tsx          # Recursive nested comment renderer
+│   ├── CommentItem.tsx          # Threaded comment item with voting, reply composer, and actions
+│   ├── ThreadComments.tsx       # Legacy modal comment list and reply box
+│   ├── RichContentEditor.tsx    # Markdown editor with GitHub-style Write / Preview tabs & formatting toolbar
+│   ├── FormattedText.tsx        # Safe markdown renderer with syntax highlighting & link sanitization
+│   ├── ImageCarousel.tsx        # Compact multi-image carousel with navigation and fullscreen zoom
+│   ├── CommunityHeader.tsx      # Subject forum header banner with moderators and stats
+│   ├── GlobalSearchBar.tsx      # Community-wide search bar for forums and posts
+│   ├── ReportDialog.tsx         # Content reporting dialog for students
 │   ├── ResourceArchive.tsx      # Sub-tabs for Notes/PYQs with moderation queue badge
 │   ├── ResourceTable.tsx        # Filterable table of downloadable subject notes and PYQs
 │   ├── UploadModal.tsx          # Quick upload modal for notes/PDFs (moderation queue)
 │   └── PdfOptimizerModal.tsx    # Client-side PDF compression studio and live preview
 ├── utils/
 │   ├── pdfCompressor.ts         # In-browser WebAssembly/canvas PDF compression engine
-│   └── storageUpload.ts         # Client-side image optimization pipeline
+│   ├── storageUpload.ts         # Storage upload utilities for communities
+│   └── imagePipeline.ts         # Client-side WebP image optimization pipeline
 ├── services/                    # Data access layer
 │   ├── types.ts                 # CommunitiesService interface & data models
 │   ├── mockService.ts           # Mock implementation with moderation staging & approval

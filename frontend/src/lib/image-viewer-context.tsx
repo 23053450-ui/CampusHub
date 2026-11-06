@@ -77,10 +77,17 @@ export function ImageViewerProvider({ children }: { children: React.ReactNode })
   );
 }
 
+const defaultContextValue: ImageViewerContextType = {
+  isOpen: false,
+  images: [],
+  currentIndex: 0,
+  title: undefined,
+  openImageViewer: () => {},
+  closeImageViewer: () => {},
+  setCurrentIndex: () => {},
+};
+
 export function useImageViewer() {
   const context = useContext(ImageViewerContext);
-  if (!context) {
-    throw new Error("useImageViewer must be used within an ImageViewerProvider");
-  }
-  return context;
+  return context ?? defaultContextValue;
 }

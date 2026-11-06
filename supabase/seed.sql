@@ -6,7 +6,7 @@
 -- -- 1. Authorized Campus Email Domains
 -- INSERT INTO public.allowed_email_domains (domain)
 -- VALUES
---   ('yourcampus.edu') -- REPLACE WITH REAL CAMPUS DOMAIN
+--   ('kiit.ac.in') -- REPLACE WITH REAL CAMPUS DOMAIN
 -- ON CONFLICT (domain) DO NOTHING;
 
 -- 2. Academic Subjects Catalogue

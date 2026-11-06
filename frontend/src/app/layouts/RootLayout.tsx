@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getSubjectById } from "@/shared/subjects";
 import { HeaderProvider, useHeader } from "@/lib/header-context";
-import { ImageViewerProvider } from "@/lib/image-viewer-context";
 import { UserSubjectsProvider, useUserSubjects } from "@/lib/user-subjects-context";
 import { useResizable } from "@/lib/use-resizable";
 import { usePersistentToggle } from "@/lib/use-persistent-toggle";
@@ -714,11 +713,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <HeaderProvider>
-      <ImageViewerProvider>
-        <UserSubjectsProvider>
-          <RootLayoutContent />
-        </UserSubjectsProvider>
-      </ImageViewerProvider>
+      <UserSubjectsProvider>
+        <RootLayoutContent />
+      </UserSubjectsProvider>
     </HeaderProvider>
   );
 }
