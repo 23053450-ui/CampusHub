@@ -236,6 +236,10 @@ export function ChatBody({
         showMaterialsToggle={hasMaterials}
         materialsVisible={materialsVisible}
         onToggleMaterials={onToggleMaterialsVisibility}
+        subjectId={subjectId}
+        subjectName={subjectName}
+        attachedTitles={studyMaterials.materials.map((m) => m.title)}
+        currentMaterialsCount={studyMaterials.materials.length}
       />
     </div>
   );

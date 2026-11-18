@@ -8,6 +8,7 @@ import {
   Users,
   Wrench,
   BookOpen,
+  Brain,
   ChevronDown,
   ChevronRight,
   Sun,
@@ -18,6 +19,7 @@ import {
   Camera,
   ShieldCheck,
   ShieldAlert,
+  Sparkles,
   Mail,
   User,
   Plus,
@@ -71,6 +73,14 @@ function getPageTitle(pathname: string): string {
 
   if (pathname.startsWith("/daily-quiz")) {
     return "Daily Quiz";
+  }
+
+  if (pathname.startsWith("/admin/quiz-bank")) {
+    return "Quiz Bank";
+  }
+
+  if (pathname.startsWith("/admin/moderators")) {
+    return "Moderator Admin";
   }
 
   if (pathname.startsWith("/subjects")) {
@@ -223,22 +233,55 @@ function RootLayoutContent() {
                 <span>Communities</span>
               </NavLink>
 
+              {/* Daily Quiz */}
+              <NavLink
+                to="/daily-quiz"
+                onClick={closeSidebarOnMobile}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary/10 font-semibold text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`
+                }
+              >
+                <Brain className="h-4 w-4 shrink-0" />
+                <span>Daily Quiz</span>
+              </NavLink>
+
               {/* Admin Panel (Admin Only) */}
               {user?.role === "admin" && (
-                <NavLink
-                  to="/admin/moderators"
-                  onClick={closeSidebarOnMobile}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary/10 font-semibold text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`
-                  }
-                >
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-destructive" />
-                  <span>Moderator Admin</span>
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/admin/moderators"
+                    onClick={closeSidebarOnMobile}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-primary/10 font-semibold text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`
+                    }
+                  >
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-destructive" />
+                    <span>Moderator Admin</span>
+                  </NavLink>
+
+                  <NavLink
+                    to="/admin/quiz-bank"
+                    onClick={closeSidebarOnMobile}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-primary/10 font-semibold text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`
+                    }
+                  >
+                    <Sparkles className="h-4 w-4 shrink-0 text-amber-500" />
+                    <span>Quiz Bank</span>
+                  </NavLink>
+                </>
               )}
 
               {/* Student Tools */}
@@ -637,22 +680,41 @@ function RootLayoutContent() {
                 {/* Navigation and Action Items */}
                 <div className="space-y-0.5">
                   {user?.role === "admin" && (
-                    <DropdownMenuItem
-                      className="flex items-center justify-between gap-3 px-3 py-2 cursor-pointer rounded-lg hover:bg-muted/60 focus:bg-muted/60 transition-colors"
-                      onClick={() => navigate("/admin/moderators")}
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <ShieldAlert className="size-4 text-destructive shrink-0 mt-0.5" />
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-medium text-foreground leading-tight">
-                            Moderator Admin
-                          </span>
-                          <span className="text-xs text-muted-foreground mt-0.5">
-                            Manage community moderators
-                          </span>
+                    <>
+                      <DropdownMenuItem
+                        className="flex items-center justify-between gap-3 px-3 py-2 cursor-pointer rounded-lg hover:bg-muted/60 focus:bg-muted/60 transition-colors"
+                        onClick={() => navigate("/admin/moderators")}
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          <ShieldAlert className="size-4 text-destructive shrink-0 mt-0.5" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-foreground leading-tight">
+                              Moderator Admin
+                            </span>
+                            <span className="text-xs text-muted-foreground mt-0.5">
+                              Manage community moderators
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </DropdownMenuItem>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className="flex items-center justify-between gap-3 px-3 py-2 cursor-pointer rounded-lg hover:bg-muted/60 focus:bg-muted/60 transition-colors"
+                        onClick={() => navigate("/admin/quiz-bank")}
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          <Sparkles className="size-4 text-amber-500 shrink-0 mt-0.5" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-foreground leading-tight">
+                              Quiz Bank Management
+                            </span>
+                            <span className="text-xs text-muted-foreground mt-0.5">
+                              Generate & curate daily quiz questions
+                            </span>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    </>
                   )}
 
                   {(user?.role === "admin" ||

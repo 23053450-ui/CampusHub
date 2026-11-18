@@ -6,6 +6,7 @@ import { ProtectedRoute } from "./layouts/ProtectedRoute";
 import { authRoutes } from "@/features/auth/routes";
 import { dashboardRoute, dashboardAliasRoute } from "@/features/dashboard/routes";
 import { communitiesRoute } from "@/features/communities/routes";
+import { dailyQuizRoute } from "@/features/daily-quiz/routes";
 import { adminRoute } from "@/features/admin/routes";
 import { profileRoute } from "@/features/profile/routes";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       dashboardRoute,
       dashboardAliasRoute,
       communitiesRoute,
+      dailyQuizRoute,
       adminRoute,
       profileRoute,
       {

@@ -6,6 +6,7 @@
 
 import type { RouteObject } from "react-router-dom";
 import { ModeratorsAdminPage } from "./ModeratorsAdminPage";
+import { QuizBankAdminPage } from "./QuizBankAdminPage";
 import { RoleRoute } from "@/app/layouts/RoleRoute";
 
 export const adminRoute: RouteObject = {
@@ -16,6 +17,14 @@ export const adminRoute: RouteObject = {
       element: (
         <RoleRoute allowedRoles={["admin"]}>
           <ModeratorsAdminPage />
+        </RoleRoute>
+      ),
+    },
+    {
+      path: "quiz-bank",
+      element: (
+        <RoleRoute allowedRoles={["admin"]}>
+          <QuizBankAdminPage />
         </RoleRoute>
       ),
     },

@@ -1,5 +1,5 @@
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 
 import {
   AlertCircle,
@@ -8,7 +8,6 @@ import {
   FileText,
   LoaderCircle,
   Paperclip,
-  Plus,
   X,
 } from "lucide-react";
 
@@ -16,6 +15,7 @@ import {
   MAX_STUDY_MATERIALS,
   type StudyMaterial,
 } from "../hooks/useStudyMaterials";
+import { UploadSourcePopover } from "./UploadSourcePopover";
 
 export interface StudyMaterialsTrayProps {
   materials: StudyMaterial[];
@@ -35,6 +35,9 @@ export interface StudyMaterialsTrayProps {
 
   // Hide the tray upload button when the composer handles uploads.
   showAddButton?: boolean;
+
+  subjectId?: string;
+  subjectName?: string;
 }
 
 function formatSize(bytes: number): string {
@@ -73,9 +76,9 @@ export function StudyMaterialsTray({
   expanded,
   onExpandedChange,
   showAddButton = true,
+  subjectId,
+  subjectName,
 }: StudyMaterialsTrayProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // Local fallback for use outside the shared parent.
   const [localExpanded, setLocalExpanded] = useState(false);
 
@@ -93,16 +96,6 @@ export function StudyMaterialsTray({
 
     setLocalExpanded(next);
     onExpandedChange?.(next);
-  }
-
-  function handleFilesSelected(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.currentTarget.files ?? []);
-
-    event.currentTarget.value = "";
-
-    if (files.length > 0) {
-      onAddFiles(files);
-    }
   }
 
   return (
@@ -209,20 +202,17 @@ export function StudyMaterialsTray({
 
         {/* Add another file */}
         {showAddButton && (
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!canAddMore}
-            title="Add PDF, TXT or MD files"
-            aria-label="Add study materials"
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {uploadingFile ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <Plus className="size-5" />
-            )}
-          </button>
+          <UploadSourcePopover
+            subjectId={subjectId ?? ""}
+            subjectName={subjectName}
+            onAddFiles={onAddFiles}
+            isUploadingFiles={Boolean(uploadingFile)}
+            canAddFiles={canAddMore}
+            alreadyAttachedTitles={materials.map((m) => m.title)}
+            currentMaterialsCount={materials.length}
+            maxMaterials={MAX_STUDY_MATERIALS}
+            tooltipTitle="Upload or choose notes"
+          />
         )}
 
         {/* Pop-out / close file panel */}
@@ -242,15 +232,6 @@ export function StudyMaterialsTray({
             <ChevronDown className="size-4" />
           )}
         </button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
-          className="hidden"
-          onChange={handleFilesSelected}
-        />
       </div>
 
       {/* Upload / removal errors */}

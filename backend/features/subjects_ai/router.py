@@ -17,14 +17,17 @@ from .study_tools import (
     GenerateFlashcardsRequest,
     GenerateFlashcardsResponse,
     generate_flashcards,
-)
-from .study_tools import (
-    GenerateFlashcardsRequest,
-    GenerateFlashcardsResponse,
-    generate_flashcards,
     GenerateQuizRequest,
     GenerateQuizResponse,
     generate_quiz,
+)
+from .quiz_bank import (
+    QuizBankGenerateRequest,
+    QuizBankGenerateResponse,
+    generate_quiz_bank_questions,
+    ApproveQuizQuestionsRequest,
+    ApproveQuizQuestionsResponse,
+    approve_quiz_bank_questions,
 )
 
 router = APIRouter(
@@ -133,3 +136,26 @@ def create_quiz(
     current_user: dict = Depends(get_current_user),
 ):
     return generate_quiz(current_user, request)
+
+
+@router.post(
+    "/quiz-bank/generate",
+    response_model=QuizBankGenerateResponse,
+)
+def create_quiz_bank_questions(
+    request: QuizBankGenerateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    return generate_quiz_bank_questions(current_user, request)
+
+
+@router.post(
+    "/quiz-bank/approve",
+    response_model=ApproveQuizQuestionsResponse,
+)
+def approve_questions(
+    request: ApproveQuizQuestionsRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    return approve_quiz_bank_questions(current_user, request)
+

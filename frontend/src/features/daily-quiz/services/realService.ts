@@ -120,6 +120,14 @@ export const realDailyQuizService: DailyQuizService = {
           explanation: item.explanation,
         };
       });
+      try {
+        localStorage.setItem(
+          `campushub:quiz_details_${getIstToday()}`,
+          JSON.stringify(details),
+        );
+      } catch {
+        // Ignore storage errors
+      }
     }
 
     return {
@@ -211,13 +219,56 @@ export const realDailyQuizService: DailyQuizService = {
       return { data: null, error: null };
     }
 
+    let details: Record<string, QuestionFeedbackItem> | undefined;
+    try {
+      const cached = localStorage.getItem(`campushub:quiz_details_${today}`);
+      if (cached) {
+        details = JSON.parse(cached);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
     return {
       data: {
         score: data.score,
         total: data.total_questions,
         answers: (data.answers as Record<string, number>) || {},
         completedAt: data.completed_at,
+        details,
       },
+      error: null,
+    };
+  },
+
+  async getCompletedDates(): Promise<Result<string[]>> {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { data: [], error: null };
+    }
+
+    const { data, error } = await supabase
+      .from("daily_quiz_submissions")
+      .select("quiz_date")
+      .eq("user_id", user.id);
+
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: "INTERNAL",
+          message: error.message,
+          details: error,
+        },
+      };
+    }
+
+    return {
+      data: (data || []).map((row) => row.quiz_date),
       error: null,
     };
   },

@@ -266,6 +266,23 @@ export const mockDailyQuizService: DailyQuizService = {
     };
   },
 
+  async getCompletedDates(): Promise<Result<string[]>> {
+    await delay(100);
+    const streak = loadStreak();
+    const dates: string[] = [];
+    if (streak.lastCompletedDate) {
+      dates.push(streak.lastCompletedDate);
+    }
+    // Provide sample completed dates for visualization in mock mode
+    const today = getIstDate(0);
+    if (!dates.includes(today)) {
+      dates.push(getIstDate(-1));
+      dates.push(getIstDate(-2));
+      dates.push(getIstDate(-4));
+    }
+    return { data: dates, error: null };
+  },
+
   async resetMockQuiz(): Promise<void> {
     try {
       localStorage.removeItem(SUBMISSION_STORAGE_KEY);

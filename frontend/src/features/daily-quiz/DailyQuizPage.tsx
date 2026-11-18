@@ -19,7 +19,6 @@ import {
 
 import {
   StreakBadge,
-  QuizTimer,
   QuizPlayer,
   ResultModal,
   ExplanationDrawer,
@@ -33,15 +32,12 @@ import type {
   TodaySubmission,
 } from "./services";
 
-const TOTAL_QUIZ_TIME_SECONDS = 300; // 5 minutes total
-
 export default function DailyQuizPage() {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_QUIZ_TIME_SECONDS);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
@@ -80,7 +76,6 @@ export default function DailyQuizPage() {
     setAnswers({});
     setScore(0);
     setQuizFinished(false);
-    setTimeLeft(TOTAL_QUIZ_TIME_SECONDS);
     setFeedbackDetails({});
     isSubmittingRef.current = false;
 
@@ -176,25 +171,6 @@ export default function DailyQuizPage() {
       isSubmittingRef.current = false;
     }
   }, [answers, quizFinished, quizQuestions]);
-
-  // Quiz Countdown Timer
-  useEffect(() => {
-    if (loading || quizFinished || alreadyCompletedToday || quizQuestions.length === 0) {
-      return;
-    }
-
-    if (timeLeft <= 0) {
-      // Time expired: auto-submit quiz
-      void handleSubmitQuiz();
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => window.clearTimeout(timer);
-  }, [timeLeft, quizFinished, loading, alreadyCompletedToday, quizQuestions.length, handleSubmitQuiz]);
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < quizQuestions.length - 1) {
@@ -489,12 +465,6 @@ export default function DailyQuizPage() {
           onJumpToQuestion={handleJumpToQuestion}
           onSubmitQuiz={() => void handleSubmitQuiz()}
           isSubmitting={submitting}
-          timerComponent={
-            <QuizTimer
-              secondsLeft={timeLeft}
-              totalSeconds={TOTAL_QUIZ_TIME_SECONDS}
-            />
-          }
         />
       ) : null}
 

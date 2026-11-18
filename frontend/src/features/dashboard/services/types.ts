@@ -8,6 +8,12 @@ import type { Result } from "@/shared/result";
 import type { Subject } from "@/shared/user";
 import type { Post } from "@/shared/communities";
 
+export interface DashboardDailyQuizSummary {
+  currentStreak: number;
+  alreadyCompletedToday: boolean;
+  completedDates: string[];
+}
+
 export interface DashboardService {
   /**
    * Fetches subjects enrolled by the active user.
@@ -29,4 +35,9 @@ export interface DashboardService {
    * Fetches top trending / hot discussions across student communities.
    */
   getHotDiscussions(limit?: number): Promise<Result<Post[]>>;
+
+  /**
+   * Fetches daily quiz summary (streak, completion status, completed dates).
+   */
+  getDailyQuizSummary(): Promise<Result<DashboardDailyQuizSummary>>;
 }

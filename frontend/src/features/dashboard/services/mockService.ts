@@ -144,4 +144,35 @@ export const mockDashboardService: DashboardService = {
       error: null,
     };
   },
+
+  async getDailyQuizSummary() {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      const raw = localStorage.getItem("campushub:mock_quiz_streak");
+      const streak = raw ? JSON.parse(raw) : { currentStreak: 3, lastCompletedDate: null };
+      const d = new Date();
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d);
+      const dates = [today];
+      const prev1 = new Date(Date.now() - 86400000);
+      const prev2 = new Date(Date.now() - 86400000 * 2);
+      const prev4 = new Date(Date.now() - 86400000 * 4);
+      dates.push(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(prev1));
+      dates.push(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(prev2));
+      dates.push(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(prev4));
+
+      return {
+        data: {
+          currentStreak: streak.currentStreak ?? 3,
+          alreadyCompletedToday: streak.lastCompletedDate === today,
+          completedDates: dates,
+        },
+        error: null,
+      };
+    } catch {
+      return {
+        data: { currentStreak: 3, alreadyCompletedToday: false, completedDates: [] },
+        error: null,
+      };
+    }
+  },
 };

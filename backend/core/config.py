@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     allow_mock_tokens: bool = False
     supabase_url: str = "https://placeholder.supabase.co"
     supabase_anon_key: str = "placeholder-anon-key"
+    supabase_service_role_key: str | None = None
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
     allowed_origins: Union[List[str], str] = ["http://localhost:5173"]

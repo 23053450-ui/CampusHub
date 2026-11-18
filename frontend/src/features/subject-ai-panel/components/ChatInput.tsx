@@ -3,8 +3,6 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronUp,
-  LoaderCircle,
-  Plus,
   Square,
 } from "lucide-react";
 
@@ -12,9 +10,10 @@ import {
   useEffect,
   useRef,
   useState,
-  type ChangeEvent,
   type KeyboardEvent,
 } from "react";
+
+import { UploadSourcePopover } from "./UploadSourcePopover";
 
 type Props = {
   isStreaming: boolean;
@@ -29,6 +28,11 @@ type Props = {
   showMaterialsToggle?: boolean;
   materialsVisible?: boolean;
   onToggleMaterials?: () => void;
+
+  subjectId?: string;
+  subjectName?: string;
+  attachedTitles?: string[];
+  currentMaterialsCount?: number;
 };
 
 export function ChatInput({
@@ -42,11 +46,14 @@ export function ChatInput({
   showMaterialsToggle = false,
   materialsVisible = true,
   onToggleMaterials,
+  subjectId,
+  subjectName,
+  attachedTitles = [],
+  currentMaterialsCount = 0,
 }: Props) {
   const [value, setValue] = useState("");
 
   const ref = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const wasStreaming = useRef(false);
 
   useEffect(() => {
@@ -83,50 +90,22 @@ export function ChatInput({
     }
   }
 
-  function handleFilesSelected(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.currentTarget.files ?? []);
-    e.currentTarget.value = "";
-
-    if (files.length > 0) {
-      onAddFiles?.(files);
-    }
-  }
-
   return (
     <div className="shrink-0 border-t bg-background p-3">
       <div className="flex items-end gap-2 rounded-xl border border-border bg-background p-2">
 
-        {/* Add study materials */}
+        {/* Add study materials popover */}
         {showAttachmentButton && (
-          <>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={
-                !onAddFiles ||
-                !canAddFiles ||
-                isUploadingFiles
-              }
-              aria-label="Add study materials"
-              title="Upload PDF, TXT or MD notes"
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isUploadingFiles ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : (
-                <Plus className="size-5" />
-              )}
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
-              className="hidden"
-              onChange={handleFilesSelected}
-            />
-          </>
+          <UploadSourcePopover
+            subjectId={subjectId ?? ""}
+            subjectName={subjectName}
+            onAddFiles={onAddFiles}
+            isUploadingFiles={isUploadingFiles}
+            canAddFiles={canAddFiles}
+            alreadyAttachedTitles={attachedTitles}
+            currentMaterialsCount={currentMaterialsCount}
+            tooltipTitle="Upload or choose notes"
+          />
         )}
 
         {/* Show / hide the entire Study Materials bar */}

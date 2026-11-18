@@ -14,7 +14,7 @@ import {
 } from "react";
 
 import { useParams } from "react-router-dom";
-import { Bot, Trash2 } from "lucide-react";
+import { Bot, ChevronDown, Trash2 } from "lucide-react";
 
 import { ChatBody } from "./components/ChatPanel";
 import { FlashcardsView } from "./components/FlashcardsView";
@@ -52,7 +52,7 @@ export default function SubjectAiPanelPage({
   const { subjectId } = useParams<{ subjectId: string }>();
 
   const [activeTool, setActiveTool] = useState<Tool>("chat");
-  const [selectorVisible, setSelectorVisible] = useState(false);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
   // Clear conversation action registered by ChatBody.
   const [clearChatHandler, setClearChatHandler] = useState<
@@ -188,6 +188,8 @@ export default function SubjectAiPanelPage({
 
     expanded: materialsExpanded,
     onExpandedChange: setMaterialsExpanded,
+    subjectId,
+    subjectName,
   };
 
   const activeToolLabel =
@@ -196,21 +198,28 @@ export default function SubjectAiPanelPage({
   return (
     <div className="flex h-full min-h-0 flex-col">
 
-      {/* Study Assistant header and hover selector */}
-      <div
-        onMouseEnter={() => setSelectorVisible(true)}
-        onMouseLeave={() => setSelectorVisible(false)}
-        className="shrink-0"
-      >
-        <header className="flex h-10 items-center gap-2 border-b px-3">
-          <Bot className="size-4 text-muted-foreground" />
+      {/* Study Assistant header and toggleable tool selector */}
+      <div className="shrink-0">
+        <header className="flex h-10 items-center justify-between border-b px-3">
+          {/* Study Assistant dropdown toggle button */}
+          <button
+            type="button"
+            onClick={() => setSelectorOpen((prev) => !prev)}
+            aria-expanded={selectorOpen}
+            aria-label={selectorOpen ? "Hide study tools" : "Show study tools"}
+            title={selectorOpen ? "Hide study tools" : "Show study tools"}
+            className="flex items-center gap-1.5 rounded-md py-1 pr-1.5 text-sm font-medium hover:bg-muted/70 transition-colors cursor-pointer select-none"
+          >
+            <Bot className="size-4 text-muted-foreground" />
+            <span className="text-foreground">{BOT_NAME}</span>
+            <ChevronDown
+              className={`size-3.5 text-muted-foreground transition-transform duration-200 ${
+                selectorOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
 
-          <h2 className="text-sm font-medium">
-            {BOT_NAME}
-          </h2>
-
-          <div className="ml-auto flex items-center gap-2">
-
+          <div className="flex items-center gap-2">
             {/* Clear conversation */}
             {activeTool === "chat" && clearChatHandler && (
               <button
@@ -224,19 +233,24 @@ export default function SubjectAiPanelPage({
               </button>
             )}
 
-            {/* Active tool indicator */}
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+            {/* Active tool indicator pill (also toggles selector) */}
+            <button
+              type="button"
+              onClick={() => setSelectorOpen((prev) => !prev)}
+              title={selectorOpen ? "Hide study tools" : "Switch study tools"}
+              className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               {activeToolLabel}
-            </span>
+            </button>
           </div>
         </header>
 
         {/* Tool selector */}
         <div
           className={`overflow-hidden transition-all duration-200 ease-in-out ${
-            selectorVisible
-              ? "max-h-10 opacity-100"
-              : "max-h-0 opacity-0"
+            selectorOpen
+              ? "max-h-12 opacity-100"
+              : "max-h-0 opacity-0 pointer-events-none"
           }`}
         >
           <div className="flex items-center gap-0.5 border-b bg-card px-2 py-1">
@@ -244,7 +258,9 @@ export default function SubjectAiPanelPage({
               <button
                 key={tool.id}
                 type="button"
-                onClick={() => setActiveTool(tool.id)}
+                onClick={() => {
+                  setActiveTool(tool.id);
+                }}
                 aria-pressed={activeTool === tool.id}
                 className={`flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                   activeTool === tool.id

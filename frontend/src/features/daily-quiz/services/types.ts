@@ -61,5 +61,7 @@ export interface DailyQuizService {
 
   getTodaySubmission(): Promise<Result<TodaySubmission | null>>;
 
+  getCompletedDates(): Promise<Result<string[]>>;
+
   resetMockQuiz?(): Promise<void>;
 }

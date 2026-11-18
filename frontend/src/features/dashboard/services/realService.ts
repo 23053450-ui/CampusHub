@@ -194,4 +194,51 @@ export const realDashboardService: DashboardService = {
       };
     }
   },
+
+  async getDailyQuizSummary() {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        return {
+          data: { currentStreak: 0, alreadyCompletedToday: false, completedDates: [] },
+          error: null,
+        };
+      }
+
+      const today = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+      }).format(new Date());
+
+      const [streakRes, subRes] = await Promise.all([
+        supabase
+          .from("user_streaks")
+          .select("current_streak, last_completed_date")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("daily_quiz_submissions")
+          .select("quiz_date")
+          .eq("user_id", user.id),
+      ]);
+
+      const streakData = streakRes.data;
+      const completedDates = (subRes.data || []).map((row: any) => row.quiz_date);
+      const alreadyCompletedToday =
+        completedDates.includes(today) || streakData?.last_completed_date === today;
+
+      return {
+        data: {
+          currentStreak: streakData?.current_streak ?? 0,
+          alreadyCompletedToday,
+          completedDates,
+        },
+        error: null,
+      };
+    } catch {
+      return {
+        data: { currentStreak: 0, alreadyCompletedToday: false, completedDates: [] },
+        error: null,
+      };
+    }
+  },
 };

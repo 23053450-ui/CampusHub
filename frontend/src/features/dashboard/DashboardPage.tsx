@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowBigDown,
   ArrowBigUp,
   ArrowRight,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
   MessageSquare,
   Plus,
   SlidersHorizontal,
@@ -18,10 +21,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { useAuth } from "@/lib/auth-context";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useHeader } from "@/lib/header-context";
 import { useUserSubjects } from "@/lib/user-subjects-context";
 import type { Post } from "@/shared/communities";
 import { dashboardService } from "./services";
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const YEARS = Array.from({ length: 9 }, (_, i) => 2022 + i);
 
 function formatRelativeTime(dateString: string): string {
   try {
@@ -41,7 +68,8 @@ function formatRelativeTime(dateString: string): string {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { setActions } = useHeader();
   const {
     enrolledSubjects,
     isLoading: loadingSubjects,
@@ -53,6 +81,10 @@ export default function DashboardPage() {
   const [calendarMonth, setCalendarMonth] = useState<Date>(today);
   const [hotPosts, setHotPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+
+  // Daily Quiz streak and calendar progress state
+  const [streakCount, setStreakCount] = useState<number>(0);
+  const [completedDates, setCompletedDates] = useState<Date[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -73,21 +105,62 @@ export default function DashboardPage() {
       }
     }
 
+    async function loadQuizData() {
+      try {
+        const summaryRes = await dashboardService.getDailyQuizSummary();
+        if (!isMounted) return;
+
+        if (summaryRes.data) {
+          setStreakCount(summaryRes.data.currentStreak);
+
+          const parsed = summaryRes.data.completedDates.map((ds) => {
+            const [y, m, d] = ds.split("-").map(Number);
+            return new Date(y, m - 1, d);
+          });
+          setCompletedDates(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to load quiz dashboard data:", err);
+      }
+    }
+
     void loadDiscussions();
+    void loadQuizData();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
+  // Set the clickable streak badge in the top navbar header actions
+  useEffect(() => {
+    setActions(
+      <button
+        type="button"
+        onClick={() => navigate("/daily-quiz")}
+        className="group flex items-center gap-1.5 sm:gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 sm:px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400 transition-all cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+        title="View Daily Quiz & Streak"
+      >
+        <Flame className="size-4 text-amber-500 fill-amber-500 animate-pulse group-hover:scale-110 transition-transform shrink-0" />
+        <span className="font-bold">
+          {streakCount} Day{streakCount === 1 ? "" : "s"}
+        </span>
+      </button>,
+    );
+
+    return () => {
+      setActions(null);
+    };
+  }, [setActions, streakCount, navigate]);
+
   return (
     <div className="min-h-full w-full min-w-0 bg-background text-foreground">
       <div className="mx-auto w-full max-w-[1400px] space-y-6 p-4 sm:p-6 lg:p-8">
         {/* Subjects & Calendar Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px] items-stretch">
           {/* My Subjects */}
-          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden min-h-[340px]">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-3.5">
+          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden h-full">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-4 py-2.5 sm:px-5 sm:py-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <BookOpen className="h-4 w-4" />
@@ -113,7 +186,7 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
 
-            <CardContent className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
+            <CardContent className="flex-1 p-4 sm:p-5 pt-2.5 sm:pt-3 flex flex-col">
               {loadingSubjects ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
                   Loading enrolled subjects...
@@ -149,16 +222,16 @@ export default function DashboardPage() {
                         className="group flex flex-col justify-between rounded-xl border border-border/80 bg-card p-4 transition-all hover:border-primary/50 hover:bg-muted/30 hover:shadow-xs min-h-[96px]"
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 font-mono text-xs font-semibold text-foreground group-hover:border-primary/40 transition-colors">
+                          <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 font-mono text-xs font-normal text-muted-foreground group-hover:border-primary/40 transition-colors">
                             {subject.code}
                           </span>
                           <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                         </div>
 
                         <div className="pt-3">
-                          <h2 className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary line-clamp-1">
+                          <p className="text-sm font-normal text-foreground transition-colors group-hover:text-primary line-clamp-1">
                             {subject.name}
-                          </h2>
+                          </p>
                         </div>
                       </Link>
                     );
@@ -168,24 +241,94 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Calendar - self-start h-fit ensures it aligns with short subject cards and never stretches into empty void */}
-          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden self-start h-fit">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-4">
-              <CardTitle className="text-base font-semibold text-foreground">
-                Calendar
-              </CardTitle>
-              <span className="text-xs font-medium text-muted-foreground">
-                Monthly view
-              </span>
-            </CardHeader>
+          {/* Calendar - Interactive Month/Year Selectors with Daily Quiz dots */}
+          <Card className="flex flex-col border-border/70 bg-card shadow-xs rounded-2xl overflow-hidden h-full">
+            {/* Direct Month & Year dropdown controls */}
+            <div className="flex items-center justify-between border-b border-border/70 px-3 py-2 sm:px-4 sm:py-2.5">
+              <div className="flex items-center gap-1.5">
+                <Select
+                  value={calendarMonth.getMonth().toString()}
+                  onValueChange={(val) => {
+                    const m = parseInt(val, 10);
+                    setCalendarMonth(new Date(calendarMonth.getFullYear(), m, 1));
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[114px] text-xs font-medium bg-muted/40 border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTH_NAMES.map((name, idx) => (
+                      <SelectItem key={idx} value={idx.toString()} className="text-xs">
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <CardContent className="p-3 sm:p-4">
+                <Select
+                  value={calendarMonth.getFullYear().toString()}
+                  onValueChange={(val) => {
+                    const y = parseInt(val, 10);
+                    setCalendarMonth(new Date(y, calendarMonth.getMonth(), 1));
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[78px] text-xs font-medium bg-muted/40 border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map((y) => (
+                      <SelectItem key={y} value={y.toString()} className="text-xs">
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() =>
+                    setCalendarMonth(
+                      new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1),
+                    )
+                  }
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() =>
+                    setCalendarMonth(
+                      new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1),
+                    )
+                  }
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+
+            <CardContent className="flex-1 p-3 sm:p-4 flex flex-col justify-center">
               <Calendar
                 mode="single"
                 month={calendarMonth}
                 onMonthChange={setCalendarMonth}
                 selected={selectedDate}
                 onSelect={setSelectedDate}
+                modifiers={{
+                  quizCompleted: completedDates,
+                }}
+                classNames={{
+                  nav: "hidden",
+                  month_caption: "hidden",
+                }}
                 showOutsideDays
                 className="w-full p-0"
               />

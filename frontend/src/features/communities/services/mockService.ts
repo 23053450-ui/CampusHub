@@ -772,7 +772,8 @@ export const mockCommunitiesService: CommunitiesService = {
         const net = (p.upvotes - p.downvotes) + (p.replyCount * 2);
         const order = net > 0 ? Math.log10(net) : net < 0 ? -Math.log10(Math.abs(net)) : 0;
         const seconds = (new Date(p.createdAt).getTime() / 1000) - 1700000000;
-        return order + (seconds / 45000);
+        // 2592000 seconds = 30 days
+        return order + (seconds / 2592000);
       };
       filtered = [...filtered].sort((a, b) => calcHotScore(b) - calcHotScore(a));
     } else {

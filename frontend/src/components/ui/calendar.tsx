@@ -127,7 +127,7 @@ function Calendar({
           classNames?.week_number
         ),
         day: cn(
-          "relative h-9 p-0 text-center align-middle select-none",
+          "relative h-9 sm:h-10 p-0 text-center align-middle select-none",
           defaultClassNames.day,
           classNames?.day
         ),
@@ -226,7 +226,7 @@ function CalendarDayButton({
       data-day={day.date.toLocaleDateString()}
       {...restProps}
       className={cn(
-        "h-8 w-8 sm:h-9 sm:w-9 mx-auto p-0 font-normal text-xs sm:text-sm rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+        "relative h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 mx-auto p-0 font-normal text-xs sm:text-sm rounded-lg flex flex-col items-center justify-center transition-colors cursor-pointer",
         modifiers.selected
           ? "bg-primary text-primary-foreground font-semibold hover:bg-primary hover:text-primary-foreground shadow-xs"
           : modifiers.today
@@ -237,7 +237,15 @@ function CalendarDayButton({
         className
       )}
     >
-      {children}
+      <span className="leading-none">{children}</span>
+      {modifiers.quizCompleted && (
+        <span
+          className={cn(
+            "absolute bottom-1 size-1 rounded-full pointer-events-none",
+            modifiers.selected ? "bg-primary-foreground" : "bg-emerald-500"
+          )}
+        />
+      )}
     </Button>
   )
 }
