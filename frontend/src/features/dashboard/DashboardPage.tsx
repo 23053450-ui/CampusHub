@@ -5,12 +5,17 @@ import {
   ArrowBigUp,
   ArrowRight,
   BookOpen,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Flame,
   MessageSquare,
+  Moon,
   Plus,
   SlidersHorizontal,
+  Sun,
+  SunMedium,
+  Sunset,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/lib/auth-context";
 import { useHeader } from "@/lib/header-context";
 import { useUserSubjects } from "@/lib/user-subjects-context";
 import type { Post } from "@/shared/communities";
@@ -67,14 +73,40 @@ function formatRelativeTime(dateString: string): string {
   }
 }
 
+function getGreetingData(): { greeting: string; Icon: React.ElementType } {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return { greeting: "Good morning", Icon: SunMedium };
+  }
+  if (hour >= 12 && hour < 17) {
+    return { greeting: "Good afternoon", Icon: Sun };
+  }
+  if (hour >= 17 && hour < 22) {
+    return { greeting: "Good evening", Icon: Sunset };
+  }
+  return { greeting: "Good evening", Icon: Moon };
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { setActions } = useHeader();
   const {
     enrolledSubjects,
     isLoading: loadingSubjects,
     openModal: openSubjectModal,
   } = useUserSubjects();
+
+  const { greeting, Icon: GreetingIcon } = getGreetingData();
+  const firstName = user?.fullName
+    ? user.fullName.trim().split(/\s+/)[0]
+    : user?.handle || "";
+
+  const currentDateFormatted = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
 
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(today);
@@ -156,6 +188,25 @@ export default function DashboardPage() {
   return (
     <div className="min-h-full w-full min-w-0 bg-background text-foreground">
       <div className="mx-auto w-full max-w-[1400px] space-y-6 p-4 sm:p-6 lg:p-8">
+        {/* Greeting Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pt-1">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <GreetingIcon className="size-5 text-amber-500/80 shrink-0" />
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                {greeting}{firstName ? `, ${firstName}` : ""}
+              </h1>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              What would you like to study today? Here&apos;s an overview of your subjects and discussions.
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-muted-foreground bg-muted/40 border border-border/60 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+            <CalendarDays className="size-3.5 text-muted-foreground" />
+            <span>{currentDateFormatted}</span>
+          </div>
+        </div>
+
         {/* Subjects & Calendar Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px] items-stretch">
           {/* My Subjects */}

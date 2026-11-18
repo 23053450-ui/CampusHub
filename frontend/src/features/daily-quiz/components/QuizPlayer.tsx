@@ -19,7 +19,6 @@ interface QuizPlayerProps {
   onJumpToQuestion: (index: number) => void;
   onSubmitQuiz: () => void;
   isSubmitting: boolean;
-  timerComponent?: React.ReactNode;
 }
 
 export function QuizPlayer({
@@ -35,7 +34,6 @@ export function QuizPlayer({
   onJumpToQuestion,
   onSubmitQuiz,
   isSubmitting,
-  timerComponent,
 }: QuizPlayerProps) {
   const isLastQuestion = questionIndex === totalQuestions - 1;
   const answeredCount = Object.keys(answers).filter(
@@ -54,17 +52,17 @@ export function QuizPlayer({
     difficultyColors[difficultyKey] || difficultyColors.medium;
 
   return (
-    <Card className="border-border bg-card shadow-sm overflow-hidden">
-      {/* Question header with metadata & timer */}
-      <CardHeader className="border-b border-border/70 p-4 sm:p-5 bg-muted/20">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-border bg-card font-semibold text-xs">
+    <Card className="border-border bg-card shadow-xs overflow-hidden">
+      {/* Question header with metadata & question jumper on a single compact line */}
+      <CardHeader className="border-b border-border/70 px-4 py-2.5 sm:px-5 sm:py-3 bg-muted/20">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <Badge variant="outline" className="border-border bg-card font-medium text-xs px-2 py-0.5">
               Question {questionIndex + 1} of {totalQuestions}
             </Badge>
 
             {question.topic && (
-              <Badge variant="secondary" className="text-xs font-medium">
+              <Badge variant="secondary" className="text-xs font-normal px-2 py-0.5">
                 {question.topic}
               </Badge>
             )}
@@ -81,15 +79,8 @@ export function QuizPlayer({
             )}
           </div>
 
-          {timerComponent && <div>{timerComponent}</div>}
-        </div>
-
-        {/* Question jumper tabs/pills */}
-        <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/50 pt-3">
-          <span className="text-xs text-muted-foreground font-medium">
-            Jump to question:
-          </span>
-          <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Question jumper tabs/pills inline */}
+          <div className="flex items-center gap-1">
             {questions.map((q, idx) => {
               const isCurrent = idx === questionIndex;
               const hasAnswered = answers[q.id] !== undefined && answers[q.id] !== -1;
@@ -100,12 +91,12 @@ export function QuizPlayer({
                   type="button"
                   onClick={() => onJumpToQuestion(idx)}
                   className={cn(
-                    "flex size-7 items-center justify-center rounded-lg text-xs font-semibold transition-all",
+                    "flex size-6.5 sm:size-7 items-center justify-center rounded-md text-xs font-medium transition-all cursor-pointer",
                     isCurrent
-                      ? "bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/30 ring-offset-1 ring-offset-background"
+                      ? "bg-primary text-primary-foreground shadow-xs ring-1 ring-primary/40"
                       : hasAnswered
-                        ? "bg-primary/20 text-primary hover:bg-primary/30"
-                        : "border border-border bg-card text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                        ? "bg-primary/15 text-primary hover:bg-primary/25"
+                        : "border border-border/70 bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                   title={`Question ${idx + 1}${hasAnswered ? " (Answered)" : ""}`}
                 >
@@ -117,16 +108,16 @@ export function QuizPlayer({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-6 space-y-6">
+      <CardContent className="p-3.5 sm:p-5 space-y-4">
         {/* Question text */}
-        <div className="space-y-1">
-          <h2 className="text-base sm:text-lg font-medium leading-relaxed text-foreground">
+        <div>
+          <h2 className="text-sm sm:text-base font-normal leading-relaxed text-foreground">
             {question.question}
           </h2>
         </div>
 
         {/* Options list */}
-        <div className="space-y-3" role="radiogroup" aria-label="Question options">
+        <div className="space-y-2" role="radiogroup" aria-label="Question options">
           {question.options.map((option, index) => {
             const isSelected = selectedAnswer === index;
             const letter = String.fromCharCode(65 + index);
@@ -139,15 +130,15 @@ export function QuizPlayer({
                 aria-checked={isSelected}
                 onClick={() => onSelectOption(index)}
                 className={cn(
-                  "flex w-full cursor-pointer items-center justify-start rounded-xl border p-3.5 sm:p-4 text-left text-sm transition-all outline-none",
+                  "flex w-full cursor-pointer items-center justify-start rounded-lg border px-3 py-2 sm:px-3.5 sm:py-2.5 text-left text-xs sm:text-sm transition-all outline-none",
                   isSelected
-                    ? "border-primary bg-primary/10 text-foreground font-medium shadow-sm ring-1 ring-primary"
-                    : "border-border bg-card text-foreground hover:bg-muted/50 hover:border-border/80",
+                    ? "border-primary bg-primary/10 text-foreground font-medium shadow-2xs ring-1 ring-primary"
+                    : "border-border bg-card text-foreground hover:bg-muted/40 hover:border-border/80",
                 )}
               >
                 <span
                   className={cn(
-                    "mr-3.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors",
+                    "mr-3 flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-medium transition-colors",
                     isSelected
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground",
@@ -156,7 +147,7 @@ export function QuizPlayer({
                   {letter}
                 </span>
 
-                <span className="flex-1 text-sm leading-snug">{option}</span>
+                <span className="flex-1 text-xs sm:text-sm leading-snug">{option}</span>
 
                 {isSelected && (
                   <Check className="size-4 shrink-0 text-primary ml-2" />
@@ -167,7 +158,7 @@ export function QuizPlayer({
         </div>
 
         {/* Card bottom navigation */}
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-border pt-4">
+        <div className="flex items-center justify-between border-t border-border/70 pt-3">
           <div className="flex items-center gap-2">
             <Button
               type="button"
@@ -175,11 +166,11 @@ export function QuizPlayer({
               size="sm"
               disabled={questionIndex === 0 || isSubmitting}
               onClick={onPrevQuestion}
-              className="gap-1.5"
+              className="h-8 gap-1 text-xs"
             >
               <ArrowLeft className="size-3.5" /> Previous
             </Button>
-            <span className="text-xs text-muted-foreground ml-2">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {answeredCount} of {totalQuestions} answered
             </span>
           </div>
@@ -191,7 +182,7 @@ export function QuizPlayer({
                 size="sm"
                 onClick={onNextQuestion}
                 disabled={isSubmitting}
-                className="gap-1.5"
+                className="h-8 gap-1 text-xs"
               >
                 Next <ArrowRight className="size-3.5" />
               </Button>
@@ -205,7 +196,7 @@ export function QuizPlayer({
                 variant={isLastQuestion ? "default" : "secondary"}
                 disabled={isSubmitting}
                 onClick={onSubmitQuiz}
-                className="gap-1.5"
+                className="h-8 gap-1 text-xs"
               >
                 <Send className="size-3.5" />
                 {isSubmitting ? "Submitting..." : "Submit Quiz"}

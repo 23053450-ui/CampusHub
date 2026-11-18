@@ -184,7 +184,7 @@ REVOKE ALL ON public.daily_quiz_assignments FROM PUBLIC, anon, authenticated;
 GRANT ALL ON public.daily_quiz_assignments TO service_role;
 
 
--- 6. INTERNAL DETERMINISTIC QUESTION ALLOCATION HELPER (MAXIMUM RECENCY SPACING)
+-- 6. INTERNAL DETERMINISTIC QUESTION ALLOCATION HELPER (STRICT ENROLLED SUBJECTS ONLY)
 CREATE OR REPLACE FUNCTION public.compute_user_daily_quiz_ids(p_user_id UUID, p_quiz_date DATE)
 RETURNS TEXT[]
 LANGUAGE plpgsql
@@ -194,8 +194,6 @@ AS $$
 DECLARE
   v_user_subjects TEXT[];
   v_subject_ids TEXT[] := '{}'::TEXT[];
-  v_general_ids TEXT[] := '{}'::TEXT[];
-  v_needed INT := 5;
 BEGIN
   -- Collect user's enrolled subjects
   SELECT ARRAY_AGG(subject_id)
@@ -203,7 +201,7 @@ BEGIN
   FROM public.user_subjects
   WHERE user_id = p_user_id;
 
-  -- 1. Candidate questions from enrolled subjects
+  -- Strictly select up to 5 questions from enrolled subjects only
   IF v_user_subjects IS NOT NULL AND CARDINALITY(v_user_subjects) > 0 THEN
     SELECT COALESCE(ARRAY_AGG(id), '{}'::TEXT[])
     INTO v_subject_ids
@@ -232,36 +230,7 @@ BEGIN
     ) s;
   END IF;
 
-  v_needed := 5 - CARDINALITY(v_subject_ids);
-
-  -- 2. Top-up from general approved pool if user subjects yielded fewer than 5
-  IF v_needed > 0 THEN
-    SELECT COALESCE(ARRAY_AGG(id), '{}'::TEXT[])
-    INTO v_general_ids
-    FROM (
-      WITH user_history AS (
-        SELECT
-          k AS qid,
-          MAX(sub.quiz_date) AS last_seen_date
-        FROM public.daily_quiz_submissions sub,
-             jsonb_object_keys(sub.answers) AS k
-        WHERE sub.user_id = p_user_id
-        GROUP BY k
-      )
-      SELECT q.id
-      FROM public.daily_quiz_questions q
-      LEFT JOIN user_history h ON h.qid = q.id
-      WHERE q.status = 'approved'
-        AND NOT (q.id = ANY(v_subject_ids))
-      ORDER BY
-        COALESCE(p_quiz_date - h.last_seen_date, 99999) DESC,
-        (CASE WHEN q.source = 'pyq' THEN 0 ELSE 1 END) ASC,
-        md5(q.id || p_user_id::text || p_quiz_date::text) ASC
-      LIMIT v_needed
-    ) g;
-  END IF;
-
-  RETURN (v_subject_ids || v_general_ids);
+  RETURN v_subject_ids;
 END;
 $$;
 
@@ -308,21 +277,30 @@ BEGIN
     FROM public.daily_quiz_assignments
     WHERE user_id = v_user_id AND quiz_date = v_today;
 
-    -- If not assigned yet, compute and snapshot
+    -- If existing assignment has questions outside user's current enrolled subjects, invalidate it
+    IF v_assigned_ids IS NOT NULL THEN
+      IF EXISTS (
+        SELECT 1
+        FROM unnest(v_assigned_ids) AS qid
+        JOIN public.daily_quiz_questions q ON q.id = qid
+        WHERE NOT (q.subject_id IN (SELECT subject_id FROM public.user_subjects WHERE user_id = v_user_id))
+      ) THEN
+        DELETE FROM public.daily_quiz_assignments
+        WHERE user_id = v_user_id AND quiz_date = v_today;
+        v_assigned_ids := NULL;
+      END IF;
+    END IF;
+
+    -- If not assigned yet or invalidated, compute strictly from enrolled subjects
     IF v_assigned_ids IS NULL THEN
       v_computed_ids := public.compute_user_daily_quiz_ids(v_user_id, v_today);
 
       IF CARDINALITY(v_computed_ids) > 0 THEN
         INSERT INTO public.daily_quiz_assignments (user_id, quiz_date, question_ids)
         VALUES (v_user_id, v_today, v_computed_ids)
-        ON CONFLICT (user_id, quiz_date) DO NOTHING;
+        ON CONFLICT (user_id, quiz_date) DO UPDATE
+          SET question_ids = EXCLUDED.question_ids;
 
-        SELECT question_ids INTO v_assigned_ids
-        FROM public.daily_quiz_assignments
-        WHERE user_id = v_user_id AND quiz_date = v_today;
-      END IF;
-
-      IF v_assigned_ids IS NULL THEN
         v_assigned_ids := v_computed_ids;
       END IF;
     END IF;

@@ -28,6 +28,28 @@ const mockQuestions: QuizQuestion[] = [
       "Third Normal Form (3NF) requires removing transitive dependencies, ensuring non-prime attributes depend strictly on candidate keys.",
   },
   {
+    id: "dbms-002",
+    subjectId: "dbms",
+    topic: "Indexing",
+    difficulty: "easy",
+    question: "Which data structure is most commonly used for B-Tree indexes in relational databases?",
+    options: ["Binary Search Tree", "Balanced Multi-way Search Tree (B+ Tree)", "Hash Table", "Skip List"],
+    correctAnswerIndex: 1,
+    explanation:
+      "B+ Trees store records at leaf nodes linked together, allowing both point queries and sequential range scans efficiently.",
+  },
+  {
+    id: "cn-001",
+    subjectId: "cn",
+    topic: "OSI Model",
+    difficulty: "easy",
+    question: "Which layer of the OSI model is responsible for end-to-end reliable transmission and port addressing?",
+    options: ["Network Layer", "Transport Layer", "Data Link Layer", "Session Layer"],
+    correctAnswerIndex: 1,
+    explanation:
+      "The Transport Layer (Layer 4) handles flow control, error checking, port numbers, and end-to-end communication.",
+  },
+  {
     id: "cn-002",
     subjectId: "cn",
     topic: "Congestion Control",
@@ -42,6 +64,22 @@ const mockQuestions: QuizQuestion[] = [
     correctAnswerIndex: 0,
     explanation:
       "Receipt of 3 duplicate ACKs informs TCP sender that a segment was dropped, prompting retransmission before the timeout expires.",
+  },
+  {
+    id: "epp-001",
+    subjectId: "epp",
+    topic: "Engineering Ethics",
+    difficulty: "medium",
+    question: "Under the IEEE and ACM Codes of Ethics, what is an engineer's foremost responsibility regarding public safety?",
+    options: [
+      "Maximize shareholder economic return",
+      "Hold paramount the health, safety, and welfare of the public",
+      "Prioritize delivery schedule over design reviews",
+      "Preserve company trade secrets unconditionally",
+    ],
+    correctAnswerIndex: 1,
+    explanation:
+      "Standard professional engineering canons dictate that public safety, health, and welfare take precedence over employer or private convenience.",
   },
   {
     id: "os-001",
@@ -78,8 +116,24 @@ const mockQuestions: QuizQuestion[] = [
   },
 ];
 
+const MOCK_ENROLLED_KEY = "campushub:mock:enrolled_subjects";
 const STREAK_STORAGE_KEY = "campushub:mock_quiz_streak";
 const SUBMISSION_STORAGE_KEY = "campushub:mock_quiz_today_submission";
+
+function getEnrolledSubjectIds(): string[] | null {
+  try {
+    const raw = localStorage.getItem(MOCK_ENROLLED_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
+}
 
 function getIstDate(offsetDays = 0): string {
   const d = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
@@ -151,12 +205,18 @@ export const mockDailyQuizService: DailyQuizService = {
     const alreadySubmitted =
       streak.lastCompletedDate === today || existingSubmission !== null;
 
+    const enrolledIds = getEnrolledSubjectIds();
+    const candidateQuestions =
+      enrolledIds && enrolledIds.length > 0
+        ? mockQuestions.filter((q) => Boolean(q.subjectId && enrolledIds.includes(q.subjectId)))
+        : mockQuestions;
+
     return {
       data: {
         date: today,
         alreadySubmitted,
         // In a real RPC, answers and explanations are omitted on initial fetch
-        questions: mockQuestions.map((q) => ({
+        questions: candidateQuestions.map((q) => ({
           id: q.id,
           subjectId: q.subjectId,
           topic: q.topic,

@@ -148,11 +148,7 @@ function RootLayoutContent() {
   };
 
   return (
-    <div
-      className={`flex bg-background text-foreground ${
-        isSubjectWorkspace ? "h-dvh overflow-hidden" : "min-h-screen"
-      }`}
-    >
+    <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground">
       {/* Sidebar with toggle */}
       <aside
         style={{
@@ -457,10 +453,10 @@ function RootLayoutContent() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header */}
         <header
-          className={`flex h-14 items-center justify-between border-b bg-background min-w-0 ${
+          className={`flex h-14 shrink-0 items-center justify-between border-b bg-background min-w-0 ${
             isSubjectWorkspace || isCommunities
               ? "pl-0.5 sm:pl-1 pr-2 sm:pr-4 lg:pr-6 gap-0"
               : "pl-1 sm:pl-2 pr-2 sm:pr-4 lg:pr-6 gap-2 sm:gap-4"
@@ -791,9 +787,9 @@ function RootLayoutContent() {
         {/* Content Area */}
         <main
           className={
-            isSubjectWorkspace
+            isSubjectWorkspace || isCommunities
               ? "flex-1 min-h-0 overflow-hidden"
-              : "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8"
+              : "flex-1 min-h-0 overflow-y-auto"
           }
         >
           <Outlet />

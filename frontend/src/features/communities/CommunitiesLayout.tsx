@@ -223,7 +223,7 @@ export default function CommunitiesLayout() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5.5rem)] -m-4 md:-m-6 lg:-m-8 overflow-hidden bg-background relative">
+    <div className="flex h-full w-full overflow-hidden bg-background relative">
       {/* Centered Global Header Search */}
       <HeaderCenter>
         <GlobalSearchBar />

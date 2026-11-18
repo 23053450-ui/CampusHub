@@ -240,25 +240,25 @@ export default function DailyQuizPage() {
   // View: Already completed today
   if (alreadyCompletedToday) {
     return (
-      <div className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6 lg:p-8">
-        <Card className="border-border bg-card shadow-sm text-center">
-          <CardContent className="space-y-6 p-6 sm:p-8">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="size-8" />
+      <div className="mx-auto w-full max-w-xl space-y-4 p-3 sm:p-4">
+        <Card className="border-border bg-card shadow-xs text-center">
+          <CardContent className="space-y-4 p-5 sm:p-6">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="size-6" />
             </div>
 
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold tracking-tight text-foreground">
                 You&apos;re All Caught Up!
               </h2>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                 You have already completed today&apos;s daily quiz and logged your attendance. Come back tomorrow for 5 new questions!
               </p>
             </div>
 
             {/* Score pill if available */}
             {todaySubmission && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-4 py-1.5 text-xs font-medium text-foreground">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3.5 py-1 text-xs font-medium text-foreground">
                 <Trophy className="size-3.5 text-amber-500" />
                 <span>
                   Today&apos;s Score: {todaySubmission.score} / {todaySubmission.total} (
@@ -269,13 +269,13 @@ export default function DailyQuizPage() {
 
             {/* Streak metrics */}
             {streak && (
-              <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-muted/30 p-4">
+              <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 p-3">
                 <div className="flex flex-col items-center justify-center">
-                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     Current Streak
                   </span>
-                  <div className="mt-1 flex items-center gap-1.5 text-2xl font-bold text-foreground">
-                    <Flame className="size-5 fill-orange-500 text-orange-500" />
+                  <div className="mt-0.5 flex items-center gap-1.5 text-xl font-bold text-foreground">
+                    <Flame className="size-4.5 fill-orange-500 text-orange-500" />
                     <span>
                       {streak.currentStreak}{" "}
                       {streak.currentStreak === 1 ? "Day" : "Days"}
@@ -283,11 +283,11 @@ export default function DailyQuizPage() {
                   </div>
                 </div>
                 <div className="flex flex-col items-center justify-center">
-                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     Best Streak
                   </span>
-                  <div className="mt-1 flex items-center gap-1.5 text-2xl font-bold text-foreground">
-                    <Trophy className="size-5 text-amber-500" />
+                  <div className="mt-0.5 flex items-center gap-1.5 text-xl font-bold text-foreground">
+                    <Trophy className="size-4.5 text-amber-500" />
                     <span>
                       {streak.bestStreak}{" "}
                       {streak.bestStreak === 1 ? "Day" : "Days"}
@@ -297,23 +297,25 @@ export default function DailyQuizPage() {
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
               {quizQuestions.length > 0 && (
                 <Button
+                  size="sm"
                   onClick={() => setIsExplanationDrawerOpen(true)}
-                  className="gap-2"
+                  className="h-8 gap-1.5 text-xs"
                 >
-                  <BookOpen className="size-4" /> Review Today&apos;s Questions
+                  <BookOpen className="size-3.5" /> Review Today&apos;s Questions
                 </Button>
               )}
 
               {isMock && (
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => void handleResetMock()}
-                  className="gap-2 text-xs text-muted-foreground"
+                  className="h-8 gap-1.5 text-xs text-muted-foreground"
                 >
-                  <RotateCcw className="size-3.5" /> Practice Again (Reset Mock)
+                  <RotateCcw className="size-3 text-muted-foreground" /> Practice Again (Reset Mock)
                 </Button>
               )}
             </div>
@@ -337,27 +339,32 @@ export default function DailyQuizPage() {
   // View: No questions available
   if (quizQuestions.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl p-6 text-center text-sm text-muted-foreground">
-        No questions are available today. Please check back tomorrow!
+      <div className="mx-auto w-full max-w-md p-4 text-center">
+        <Card className="border-border bg-card shadow-xs">
+          <CardContent className="p-6 space-y-2">
+            <h3 className="text-base font-semibold text-foreground">
+              No Quiz Questions Available
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              No questions are currently available for your enrolled subjects. Make sure you have enrolled in subjects on your dashboard, or generate questions in the Quiz Bank.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
-      {/* Header section */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Brain className="size-4 text-primary" />
-            <span>CampusHub Daily Practice</span>
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Daily Quiz
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Challenge yourself with core CS questions and keep your learning streak alive.
-          </p>
+    <div className="mx-auto w-full max-w-3xl space-y-3 p-3 sm:p-4">
+      {/* Sleek compact header row */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-semibold text-foreground">
+            Today&apos;s Questions
+          </span>
+          <span className="text-xs text-muted-foreground font-normal">
+            ({totalAnswered} of {quizQuestions.length} answered)
+          </span>
         </div>
 
         {streak && (
@@ -368,44 +375,34 @@ export default function DailyQuizPage() {
         )}
       </div>
 
-      {/* Progress bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs font-medium text-muted-foreground">
-          <span>
-            {quizFinished
-              ? "All Questions Completed"
-              : `Question ${currentQuestionIndex + 1} of ${quizQuestions.length} (${totalAnswered} Answered)`}
-          </span>
-          <span>{Math.round(progressPercent)}% Answered</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+      {/* Thin Progress bar */}
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary transition-all duration-300"
+          style={{ width: `${progressPercent}%` }}
+        />
       </div>
 
       {quizFinished ? (
         /* Results View */
-        <div className="space-y-6">
-          <Card className="overflow-hidden border-border bg-card shadow-sm text-center">
-            <CardContent className="p-6 sm:p-8 space-y-6">
-              <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <div className="space-y-4">
+          <Card className="overflow-hidden border-border bg-card shadow-xs text-center">
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 {score >= 4 ? (
-                  <Trophy className="size-8 text-amber-500 animate-bounce" />
+                  <Trophy className="size-6 text-amber-500 animate-bounce" />
                 ) : score >= 3 ? (
-                  <CheckCircle2 className="size-8 text-emerald-500" />
+                  <CheckCircle2 className="size-6 text-emerald-500" />
                 ) : (
-                  <Brain className="size-8 text-primary" />
+                  <Brain className="size-6 text-primary" />
                 )}
               </div>
 
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold text-foreground">
                   Quiz Completed!
                 </h2>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                   {score >= 4
                     ? "Outstanding job! You have demonstrated a strong mastery of today's topics."
                     : score >= 3
@@ -414,36 +411,38 @@ export default function DailyQuizPage() {
                 </p>
               </div>
 
-              <div className="my-2 inline-flex flex-col items-center justify-center rounded-xl border border-border bg-muted/40 px-8 py-5">
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="my-1 inline-flex flex-col items-center justify-center rounded-xl border border-border bg-muted/40 px-6 py-3">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   Final Score
                 </span>
-                <span className="mt-1 text-4xl font-extrabold text-foreground">
+                <span className="mt-0.5 text-3xl font-extrabold text-foreground">
                   {score}{" "}
-                  <span className="text-xl font-normal text-muted-foreground">
+                  <span className="text-lg font-normal text-muted-foreground">
                     / {quizQuestions.length}
                   </span>
                 </span>
-                <span className="mt-1 text-xs font-medium text-primary">
+                <span className="mt-0.5 text-xs font-medium text-primary">
                   {Math.round((score / quizQuestions.length) * 100)}% Accuracy
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
                 <Button
+                  size="sm"
                   onClick={() => setIsExplanationDrawerOpen(true)}
-                  className="gap-2"
+                  className="h-8 gap-1.5 text-xs"
                 >
-                  <BookOpen className="size-4" /> Review Explanations
+                  <BookOpen className="size-3.5" /> Review Explanations
                 </Button>
 
                 {isMock && (
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => void handleResetMock()}
-                    className="gap-2"
+                    className="h-8 gap-1.5 text-xs text-muted-foreground"
                   >
-                    <RotateCcw className="size-4" /> Practice Again (Reset Mock)
+                    <RotateCcw className="size-3 text-muted-foreground" /> Practice Again (Reset Mock)
                   </Button>
                 )}
               </div>
