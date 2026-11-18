@@ -237,7 +237,7 @@ export function MilkdownEditor({
               <button
                 type="button"
                 onClick={onDelete}
-                className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                className="delete-btn h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 title="Delete note"
                 aria-label="Delete note"
               >
@@ -250,12 +250,12 @@ export function MilkdownEditor({
                 type="button"
                 onClick={onSave}
                 disabled={saving || !isDirty}
-                className={`h-7 px-3 flex items-center gap-1.5 rounded text-xs font-medium transition-all shadow-xs ${
+                className={`save-btn h-7 px-3 flex items-center gap-1.5 rounded-md text-xs font-semibold transition-all ${
                   saving
-                    ? "opacity-60 cursor-wait bg-primary text-primary-foreground"
+                    ? "is-saving opacity-70 cursor-wait bg-primary text-primary-foreground border-primary"
                     : isDirty
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm"
-                    : "bg-secondary/70 text-muted-foreground hover:bg-secondary cursor-default"
+                    ? "is-dirty bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-sm border-primary"
+                    : "is-clean bg-muted text-muted-foreground border border-border hover:bg-muted/80 cursor-default"
                 }`}
                 title={isDirty ? "Save note (Ctrl+S)" : "All changes saved (Ctrl+S)"}
                 aria-label="Save note"

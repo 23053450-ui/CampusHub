@@ -120,6 +120,89 @@
   z-index: 25 !important;
 }
 
+/* Explicit styling for actions slot buttons to override .milkdown button reset */
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important;
+  height: 1.75rem !important;
+  padding: 0 0.75rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  line-height: 1rem !important;
+  transition: all 0.15s ease !important;
+  border: 1px solid transparent !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-dirty {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.1) !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-dirty:hover {
+  opacity: 0.9 !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-dirty svg {
+  color: hsl(var(--primary-foreground)) !important;
+  stroke: hsl(var(--primary-foreground)) !important;
+  fill: none !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-clean {
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  cursor: default !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-clean svg {
+  color: #10b981 !important;
+  stroke: #10b981 !important;
+  fill: none !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-saving {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
+  opacity: 0.7 !important;
+  cursor: wait !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .save-btn.is-saving svg {
+  color: hsl(var(--primary-foreground)) !important;
+  stroke: hsl(var(--primary-foreground)) !important;
+  fill: none !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .delete-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 1.75rem !important;
+  width: 1.75rem !important;
+  border-radius: 0.375rem !important;
+  color: hsl(var(--muted-foreground)) !important;
+  cursor: pointer !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .delete-btn:hover {
+  color: hsl(var(--destructive)) !important;
+  background-color: hsl(var(--destructive) / 0.1) !important;
+}
+
+.milkdown .milkdown-top-bar .milkdown-topbar-actions .delete-btn svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  fill: none !important;
+}
+
 .milkdown .milkdown-top-bar .top-bar-divider {
   background: hsl(var(--border)) !important;
 }
